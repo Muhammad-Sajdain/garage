@@ -1,0 +1,25 @@
+{
+  "name": "garage-api",
+  "version": "1.0.0",
+  "description": "Express.js API starter with migration-ready structure",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "migrate": "sequelize-cli db:migrate",
+    "migrate:undo": "sequelize-cli db:migrate:undo",
+    "db:test": "node ./migrations/run.js"
+  },
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.3",
+    "mysql2": "^3.23.2",
+    "sequelize": "^6.37.8",
+    "sequelize-cli": "^6.6.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.4"
+  }
+}
