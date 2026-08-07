@@ -11,6 +11,16 @@ const packageHistoryRoutes = require('./packageHistoryRoutes');
 const customerRoutes = require('./customerRoutes');
 const vehicleRoutes = require('./vehicleRoutes');
 const insuredVehicleRoutes = require('./insuredVehicleRoutes');
+const taskCardRoutes = require('./taskCardRoutes');
+const taskRoutes = require('./taskRoutes');
+const quotationRoutes = require('./quotationRoutes');
+const invoiceRoutes = require('./invoiceRoutes');
+const invoicePaymentRoutes = require('./invoicePaymentRoutes');
+const customerReviewRoutes = require('./customerReviewRoutes');
+const vehicleMaintenancePictureRoutes = require('./vehicleMaintenancePictureRoutes');
+const twilioSmsSettingRoutes = require('./twilioSmsSettingRoutes');
+const twilioWhatsappSettingRoutes = require('./twilioWhatsappSettingRoutes');
+const sendgridSettingRoutes = require('./sendgridSettingRoutes');
 
 const router = express.Router();
 
@@ -22,9 +32,16 @@ router.use('/users', usersRoutes);
 router.use('/roles', roleRoutes);
 router.use('/companies', companyRoutes);
 router.use('/company-users', companyUserRoutes);
+router.use('/appointments', require('./appointmentRoutes'));
 router.use('/package-histories', packageHistoryRoutes);
 router.use('/customers', customerRoutes);
 router.use('/vehicles', vehicleRoutes);
 router.use('/insured-vehicles', insuredVehicleRoutes);
-
+router.use('/quotations', quotationRoutes);
+router.use('/invoices', invoiceRoutes);
+router.use('/invoice-payments', invoicePaymentRoutes);
+router.use('/vehicle-maintenance-pictures', vehicleMaintenancePictureRoutes);
+router.use('/twilio-sms-settings', twilioSmsSettingRoutes);
+router.use('/twilio-whatsapp-settings', twilioWhatsappSettingRoutes);
+router.use('/sendgrid-settings', sendgridSettingRoutes);
 module.exports = router;
