@@ -21,6 +21,8 @@ const vehicleMaintenancePictureRoutes = require('./vehicleMaintenancePictureRout
 const twilioSmsSettingRoutes = require('./twilioSmsSettingRoutes');
 const twilioWhatsappSettingRoutes = require('./twilioWhatsappSettingRoutes');
 const sendgridSettingRoutes = require('./sendgridSettingRoutes');
+const smsRoutes = require('./smsRoutes');
+const whatsAppRoutes = require('./whatsappRoutes');
 
 const router = express.Router();
 
@@ -44,4 +46,9 @@ router.use('/vehicle-maintenance-pictures', vehicleMaintenancePictureRoutes);
 router.use('/twilio-sms-settings', twilioSmsSettingRoutes);
 router.use('/twilio-whatsapp-settings', twilioWhatsappSettingRoutes);
 router.use('/sendgrid-settings', sendgridSettingRoutes);
+router.use('/sms', smsRoutes);
+router.use('/whatsApp-sms', whatsAppRoutes);
+
+
+
 module.exports = router;
