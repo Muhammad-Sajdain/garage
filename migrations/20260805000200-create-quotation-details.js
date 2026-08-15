@@ -13,8 +13,16 @@ module.exports = {
       tax: { type: Sequelize.DECIMAL(10,2), allowNull: true },
       status: { type: Sequelize.TINYINT, allowNull: false, defaultValue: 1 },
       is_deleted: { type: Sequelize.TINYINT, allowNull: false, defaultValue: 0 },
-      createdAt: { allowNull: false, type: Sequelize.DATE },
-      updatedAt: { allowNull: false, type: Sequelize.DATE },
+      createdAt: {
+        allowNull: false,
+        type: Sequelize.DATE,
+        defaultValue: Sequelize.NOW,
+      },
+      updatedAt: {
+        allowNull: false,
+        type: Sequelize.DATE,
+        defaultValue: Sequelize.NOW,
+      },
     });
     await queryInterface.addIndex('quotation_details', ['quotation_id']);
   },

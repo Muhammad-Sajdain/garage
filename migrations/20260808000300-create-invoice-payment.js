@@ -17,8 +17,16 @@ module.exports = {
       created_by: { type: Sequelize.INTEGER, allowNull: false },
       verified_by: { type: Sequelize.INTEGER, allowNull: true },
       verifiedAt: { type: Sequelize.DATE, allowNull: true },
-      createdAt: { allowNull: false, type: Sequelize.DATE },
-      updatedAt: { allowNull: false, type: Sequelize.DATE }
+      createdAt: {
+        allowNull: false,
+        type: Sequelize.DATE,
+        defaultValue: Sequelize.NOW,
+      },
+      updatedAt: {
+        allowNull: false,
+        type: Sequelize.DATE,
+        defaultValue: Sequelize.NOW,
+      }
     });
   },
   async down(queryInterface, Sequelize) {

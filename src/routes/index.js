@@ -23,6 +23,7 @@ const twilioWhatsappSettingRoutes = require('./twilioWhatsappSettingRoutes');
 const sendgridSettingRoutes = require('./sendgridSettingRoutes');
 const smsRoutes = require('./smsRoutes');
 const whatsAppRoutes = require('./whatsappRoutes');
+const emailRoutes = require('./emailRoutes');
 
 const router = express.Router();
 
@@ -48,7 +49,7 @@ router.use('/twilio-whatsapp-settings', twilioWhatsappSettingRoutes);
 router.use('/sendgrid-settings', sendgridSettingRoutes);
 router.use('/sms', smsRoutes);
 router.use('/whatsApp-sms', whatsAppRoutes);
-
-
+router.use('/email', emailRoutes);
+router.use('/send-email', emailRoutes);
 
 module.exports = router;

@@ -15,8 +15,16 @@ module.exports = {
       is_deleted: { type: Sequelize.TINYINT, allowNull: false, defaultValue: 0 },
       created_by: { type: Sequelize.INTEGER, allowNull: false },
       updated_by: { type: Sequelize.INTEGER, allowNull: true },
-      createdAt: { allowNull: false, type: Sequelize.DATE },
-      updatedAt: { allowNull: false, type: Sequelize.DATE }
+      createdAt: {
+        allowNull: false,
+        type: Sequelize.DATE,
+        defaultValue: Sequelize.NOW,
+      },
+      updatedAt: {
+        allowNull: false,
+        type: Sequelize.DATE,
+        defaultValue: Sequelize.NOW,
+      }
     });
   },
   async down(queryInterface, Sequelize) {

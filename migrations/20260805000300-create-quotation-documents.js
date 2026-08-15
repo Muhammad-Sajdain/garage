@@ -8,8 +8,16 @@ module.exports = {
       document: { type: Sequelize.STRING, allowNull: false },
       status: { type: Sequelize.TINYINT, allowNull: false, defaultValue: 1 },
       is_deleted: { type: Sequelize.TINYINT, allowNull: false, defaultValue: 0 },
-      createdAt: { allowNull: false, type: Sequelize.DATE },
-      updatedAt: { allowNull: false, type: Sequelize.DATE },
+      createdAt: {
+        allowNull: false,
+        type: Sequelize.DATE,
+        defaultValue: Sequelize.NOW,
+      },
+      updatedAt: {
+        allowNull: false,
+        type: Sequelize.DATE,
+        defaultValue: Sequelize.NOW,
+      },
     });
     await queryInterface.addIndex('quotation_documents', ['quotation_id']);
   },
