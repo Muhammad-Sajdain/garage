@@ -97,7 +97,7 @@ const collection = {
     schema: 'https://schema.getpostman.com/json/collection/v2.1.0/collection.json'
   },
   variable: [
-    { key: 'base_url', value: 'http://localhost:3000/api', type: 'string' },
+    { key: 'base_url', value: 'http://localhost:5000/api', type: 'string' },
     { key: 'admin_token', value: '', type: 'string' },
     { key: 'user_token', value: '', type: 'string' }
   ],
@@ -179,7 +179,9 @@ const collection = {
     {
       name: 'Company Users',
       item: [
-        get('List Company Users', 'company-users', 'admin_token'),
+        get('List Company Users', 'company-users', 'admin_token', [
+          { key: 'company_id', value: '1', description: 'Required company ID' }
+        ]),
         post('Create Company User', 'company-users', 'admin_token', rawBody({ user_id: 2, company_id: 1, role_id: 1, status: 1 }), false),
         post('Create Company User (alt POST /company-users/users)', 'company-users/users', 'admin_token', rawBody({ user_id: 2, company_id: 1, role_id: 1, status: 1 }), false, 'Alternate endpoint, same as POST /company-users'),
         get('Get Company User by ID', 'company-users/1', 'admin_token'),
@@ -274,6 +276,11 @@ const collection = {
     crudFolder('Tasks', 'tasks',
       { task_card_id: 1, type: 'service', description: 'Oil change – 5W-30 synthetic', qty: 1, task_status: 'pending', created_by: 1 },
       { task_status: 'Inprogress', qty: 2, updated_by: 1 },
+      'user_token', false),
+
+    crudFolder('Task Assignments', 'task-assignments',
+      { task_id: 1, user_id: 1, status: 1 },
+      { user_id: 2, status: 1 },
       'user_token', false),
 
     // ── Invoices ──────────────────────────────────────────────────────────────

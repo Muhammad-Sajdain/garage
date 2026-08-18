@@ -1,75 +1,159 @@
 {
   "info": {
-    "name": "Garage API CRUD Collection",
-    "description": "Postman collection for the Garage Express + Sequelize CRUD APIs.",
+    "_postman_id": "garage-api-collection-v2",
+    "name": "Garage API Collection",
+    "description": "Complete API collection for the Garage management system.\nBase URL variable: {{base_url}} (default: http://localhost:3000/api)\n\nTip: Login endpoints have test scripts that auto-save tokens to collection variables.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
     {
-      "key": "baseUrl",
-      "value": "http://localhost:5003/api",
+      "key": "base_url",
+      "value": "http://localhost:5000/api",
+      "type": "string"
+    },
+    {
+      "key": "admin_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "user_token",
+      "value": "",
       "type": "string"
     }
   ],
   "item": [
     {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health Check (GET /health)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "health"
+              ]
+            },
+            "description": "Check if the API server is running."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
       "name": "Auth",
       "item": [
         {
-          "name": "Admin Login",
+          "name": "Admin Login (POST /auth/admin/login)",
           "request": {
             "method": "POST",
             "header": [
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{null}}"
               }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"123456\"\n}"
+              "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"yourpassword\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
-              "raw": "{{baseUrl}}/auth/admin/login",
-              "host": ["{{baseUrl}}"],
-              "path": ["auth", "admin", "login"]
-            }
+              "raw": "{{base_url}}/auth/admin/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "admin",
+                "login"
+              ]
+            },
+            "description": "Login as admin. Returns JWT token + role=SuperAdmin."
           },
-          "response": [
+          "response": [],
+          "events": [
             {
-              "name": "Admin Login Success",
-              "status": "OK",
-              "code": 200,
-              "body": "{\"success\":true,\"token\":\"<jwt-token>\",\"user\":{\"id\":1,\"name\":\"Admin\",\"email\":\"admin@example.com\",\"role\":\"admin\"}}"
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const json = pm.response.json();",
+                  "    if (json.token) {",
+                  "        pm.collectionVariables.set('admin_token', json.token);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
             }
           ]
         },
         {
-          "name": "User Login",
+          "name": "User Login (POST /auth/user/login)",
           "request": {
             "method": "POST",
             "header": [
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{null}}"
               }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"123456\"\n}"
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"yourpassword\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
-              "raw": "{{baseUrl}}/auth/user/login",
-              "host": ["{{baseUrl}}"],
-              "path": ["auth", "user", "login"]
-            }
+              "raw": "{{base_url}}/auth/user/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "user",
+                "login"
+              ]
+            },
+            "description": "Login as company user. Returns JWT token + role from company_users → roles."
           },
-          "response": [
+          "response": [],
+          "events": [
             {
-              "name": "User Login Success",
-              "status": "OK",
-              "code": 200,
-              "body": "{\"success\":true,\"token\":\"<jwt-token>\",\"user\":{\"id\":1,\"name\":\"User\",\"email\":\"user@example.com\",\"role\":\"user\"}}"
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const json = pm.response.json();",
+                  "    if (json.token) {",
+                  "        pm.collectionVariables.set('user_token', json.token);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
             }
           ]
         }
@@ -79,23 +163,79 @@
       "name": "Admins",
       "item": [
         {
+          "name": "Admin Login (POST /admins/login)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{null}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"yourpassword\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/admins/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admins",
+                "login"
+              ]
+            },
+            "description": "Alternate admin login. Same as /auth/admin/login."
+          },
+          "response": [],
+          "events": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const json = pm.response.json();",
+                  "    if (json.token) {",
+                  "        pm.collectionVariables.set('admin_token', json.token);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
           "name": "List Admins",
           "request": {
             "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
             "url": {
-              "raw": "{{baseUrl}}/admins",
-              "host": ["{{baseUrl}}"],
-              "path": ["admins"]
+              "raw": "{{base_url}}/admins",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admins"
+              ]
             }
           },
-          "response": [
-            {
-              "name": "List Admins Success",
-              "status": "OK",
-              "code": 200,
-              "body": "{\"success\":true,\"data\":[{\"id\":1,\"name\":\"Super Admin\",\"email\":\"admin@example.com\",\"phone\":\"9999999999\",\"status\":1,\"is_deleted\":0}]}"
-            }
-          ]
+          "response": []
         },
         {
           "name": "Create Admin",
@@ -105,45 +245,56 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
               }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Super Admin\",\n  \"email\": \"admin@example.com\",\n  \"password\": \"123456\",\n  \"phone\": \"9999999999\",\n  \"status\": 1\n}"
+              "raw": "{\n  \"name\": \"Admin Name\",\n  \"email\": \"newadmin@example.com\",\n  \"password\": \"securepassword\",\n  \"phone\": \"+1234567890\",\n  \"status\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
-              "raw": "{{baseUrl}}/admins",
-              "host": ["{{baseUrl}}"],
-              "path": ["admins"]
-            }
+              "raw": "{{base_url}}/admins",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admins"
+              ]
+            },
+            "description": ""
           },
-          "response": [
-            {
-              "name": "Create Admin Success",
-              "status": "Created",
-              "code": 201,
-              "body": "{\"success\":true,\"data\":{\"id\":1,\"name\":\"Super Admin\",\"email\":\"admin@example.com\",\"phone\":\"9999999999\",\"status\":1,\"is_deleted\":0}}"
-            }
-          ]
+          "response": []
         },
         {
-          "name": "Get Admin By Id",
+          "name": "Get Admin by ID",
           "request": {
             "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
             "url": {
-              "raw": "{{baseUrl}}/admins/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["admins", "1"]
+              "raw": "{{base_url}}/admins/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admins",
+                "1"
+              ]
             }
           },
-          "response": [
-            {
-              "name": "Get Admin Success",
-              "status": "OK",
-              "code": 200,
-              "body": "{\"success\":true,\"data\":{\"id\":1,\"name\":\"Super Admin\",\"email\":\"admin@example.com\",\"phone\":\"9999999999\",\"status\":1,\"is_deleted\":0}}"
-            }
-          ]
+          "response": []
         },
         {
           "name": "Update Admin",
@@ -153,45 +304,56 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
               }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Super Admin Updated\",\n  \"phone\": \"8888888888\"\n}"
+              "raw": "{\n  \"name\": \"Updated Admin\",\n  \"phone\": \"+9876543210\",\n  \"status\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
-              "raw": "{{baseUrl}}/admins/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["admins", "1"]
+              "raw": "{{base_url}}/admins/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admins",
+                "1"
+              ]
             }
           },
-          "response": [
-            {
-              "name": "Update Admin Success",
-              "status": "OK",
-              "code": 200,
-              "body": "{\"success\":true,\"data\":{\"id\":1,\"name\":\"Super Admin Updated\",\"email\":\"admin@example.com\",\"phone\":\"8888888888\",\"status\":1,\"is_deleted\":0}}"
-            }
-          ]
+          "response": []
         },
         {
           "name": "Delete Admin",
           "request": {
             "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
             "url": {
-              "raw": "{{baseUrl}}/admins/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["admins", "1"]
+              "raw": "{{base_url}}/admins/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admins",
+                "1"
+              ]
             }
           },
-          "response": [
-            {
-              "name": "Delete Admin Success",
-              "status": "OK",
-              "code": 200,
-              "body": "{\"success\":true,\"message\":\"Admin deleted successfully\"}"
-            }
-          ]
+          "response": []
         }
       ]
     },
@@ -199,23 +361,79 @@
       "name": "Users",
       "item": [
         {
+          "name": "User Login (POST /users/login)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{null}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"yourpassword\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/users/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "login"
+              ]
+            },
+            "description": "Alternate user login. Same as /auth/user/login."
+          },
+          "response": [],
+          "events": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const json = pm.response.json();",
+                  "    if (json.token) {",
+                  "        pm.collectionVariables.set('user_token', json.token);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
           "name": "List Users",
           "request": {
             "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
             "url": {
-              "raw": "{{baseUrl}}/users",
-              "host": ["{{baseUrl}}"],
-              "path": ["users"]
+              "raw": "{{base_url}}/users",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users"
+              ]
             }
           },
-          "response": [
-            {
-              "name": "List Users Success",
-              "status": "OK",
-              "code": 200,
-              "body": "{\"success\":true,\"data\":[{\"id\":1,\"name\":\"Test User\",\"country\":\"India\",\"email\":\"user@example.com\",\"phone\":\"7777777777\",\"address\":\"Test Address\",\"status\":1,\"is_deleted\":0}]}"
-            }
-          ]
+          "response": []
         },
         {
           "name": "Create User",
@@ -225,45 +443,56 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
               }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Test User\",\n  \"country\": \"India\",\n  \"email\": \"user@example.com\",\n  \"password\": \"123456\",\n  \"phone\": \"7777777777\",\n  \"address\": \"Test Address\",\n  \"status\": 1\n}"
+              "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"password\": \"securepassword\",\n  \"phone\": \"+1234567890\",\n  \"country\": \"US\",\n  \"address\": \"123 Main St\",\n  \"status\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
-              "raw": "{{baseUrl}}/users",
-              "host": ["{{baseUrl}}"],
-              "path": ["users"]
-            }
+              "raw": "{{base_url}}/users",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users"
+              ]
+            },
+            "description": ""
           },
-          "response": [
-            {
-              "name": "Create User Success",
-              "status": "Created",
-              "code": 201,
-              "body": "{\"success\":true,\"data\":{\"id\":1,\"name\":\"Test User\",\"country\":\"India\",\"email\":\"user@example.com\",\"phone\":\"7777777777\",\"address\":\"Test Address\",\"status\":1,\"is_deleted\":0}}"
-            }
-          ]
+          "response": []
         },
         {
-          "name": "Get User By Id",
+          "name": "Get User by ID",
           "request": {
             "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
             "url": {
-              "raw": "{{baseUrl}}/users/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["users", "1"]
+              "raw": "{{base_url}}/users/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "1"
+              ]
             }
           },
-          "response": [
-            {
-              "name": "Get User Success",
-              "status": "OK",
-              "code": 200,
-              "body": "{\"success\":true,\"data\":{\"id\":1,\"name\":\"Test User\",\"country\":\"India\",\"email\":\"user@example.com\",\"phone\":\"7777777777\",\"address\":\"Test Address\",\"status\":1,\"is_deleted\":0}}"
-            }
-          ]
+          "response": []
         },
         {
           "name": "Update User",
@@ -273,45 +502,56 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
               }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Test User Updated\",\n  \"phone\": \"6666666666\"\n}"
+              "raw": "{\n  \"name\": \"Updated Name\",\n  \"phone\": \"+9876543210\",\n  \"country\": \"CA\",\n  \"address\": \"456 Another St\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
-              "raw": "{{baseUrl}}/users/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["users", "1"]
+              "raw": "{{base_url}}/users/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "1"
+              ]
             }
           },
-          "response": [
-            {
-              "name": "Update User Success",
-              "status": "OK",
-              "code": 200,
-              "body": "{\"success\":true,\"data\":{\"id\":1,\"name\":\"Test User Updated\",\"country\":\"India\",\"email\":\"user@example.com\",\"phone\":\"6666666666\",\"address\":\"Test Address\",\"status\":1,\"is_deleted\":0}}"
-            }
-          ]
+          "response": []
         },
         {
           "name": "Delete User",
           "request": {
             "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
             "url": {
-              "raw": "{{baseUrl}}/users/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["users", "1"]
+              "raw": "{{base_url}}/users/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "1"
+              ]
             }
           },
-          "response": [
-            {
-              "name": "Delete User Success",
-              "status": "OK",
-              "code": 200,
-              "body": "{\"success\":true,\"message\":\"User deleted successfully\"}"
-            }
-          ]
+          "response": []
         }
       ]
     },
@@ -322,116 +562,141 @@
           "name": "List Roles",
           "request": {
             "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
             "url": {
-              "raw": "{{baseUrl}}/roles",
-              "host": ["{{baseUrl}}"],
-              "path": ["roles"]
+              "raw": "{{base_url}}/roles",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "roles"
+              ]
             }
           },
-          "response": [
-            {
-              "name": "List Roles Success",
-              "status": "OK",
-              "code": 200,
-              "body": "{\"success\":true,\"data\":[{\"id\":1,\"name\":\"Admin\",\"status\":1,\"is_deleted\":0}]}"
-            }
-          ]
+          "response": []
         },
         {
-          "name": "Create Role",
+          "name": "Create Roles",
           "request": {
             "method": "POST",
             "header": [
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
               }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Admin\",\n  \"status\": 1\n}"
+              "raw": "{\n  \"name\": \"Manager\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
-              "raw": "{{baseUrl}}/roles",
-              "host": ["{{baseUrl}}"],
-              "path": ["roles"]
-            }
+              "raw": "{{base_url}}/roles",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "roles"
+              ]
+            },
+            "description": ""
           },
-          "response": [
-            {
-              "name": "Create Role Success",
-              "status": "Created",
-              "code": 201,
-              "body": "{\"success\":true,\"data\":{\"id\":1,\"name\":\"Admin\",\"status\":1,\"is_deleted\":0}}"
-            }
-          ]
+          "response": []
         },
         {
-          "name": "Get Role By Id",
+          "name": "Get Roles by ID",
           "request": {
             "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
             "url": {
-              "raw": "{{baseUrl}}/roles/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["roles", "1"]
+              "raw": "{{base_url}}/roles/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "roles",
+                "1"
+              ]
             }
           },
-          "response": [
-            {
-              "name": "Get Role Success",
-              "status": "OK",
-              "code": 200,
-              "body": "{\"success\":true,\"data\":{\"id\":1,\"name\":\"Admin\",\"status\":1,\"is_deleted\":0}}"
-            }
-          ]
+          "response": []
         },
         {
-          "name": "Update Role",
+          "name": "Update Roles",
           "request": {
             "method": "PUT",
             "header": [
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
               }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Owner\"\n}"
+              "raw": "{\n  \"name\": \"Senior Manager\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
-              "raw": "{{baseUrl}}/roles/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["roles", "1"]
+              "raw": "{{base_url}}/roles/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "roles",
+                "1"
+              ]
             }
           },
-          "response": [
-            {
-              "name": "Update Role Success",
-              "status": "OK",
-              "code": 200,
-              "body": "{\"success\":true,\"data\":{\"id\":1,\"name\":\"Owner\",\"status\":1,\"is_deleted\":0}}"
-            }
-          ]
+          "response": []
         },
         {
-          "name": "Delete Role",
+          "name": "Delete Roles",
           "request": {
             "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
             "url": {
-              "raw": "{{baseUrl}}/roles/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["roles", "1"]
+              "raw": "{{base_url}}/roles/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "roles",
+                "1"
+              ]
             }
           },
-          "response": [
-            {
-              "name": "Delete Role Success",
-              "status": "OK",
-              "code": 200,
-              "body": "{\"success\":true,\"message\":\"Role deleted successfully\"}"
-            }
-          ]
+          "response": []
         }
       ]
     },
@@ -442,20 +707,23 @@
           "name": "List Companies",
           "request": {
             "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
             "url": {
-              "raw": "{{baseUrl}}/companies",
-              "host": ["{{baseUrl}}"],
-              "path": ["companies"]
+              "raw": "{{base_url}}/companies",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "companies"
+              ]
             }
           },
-          "response": [
-            {
-              "name": "List Companies Success",
-              "status": "OK",
-              "code": 200,
-              "body": "{\"success\":true,\"data\":[{\"id\":1,\"owner_id\":1,\"logo\":\"logo.png\",\"email\":\"company@example.com\",\"country\":\"India\",\"phone\":\"1234567890\",\"address\":\"Addr 1\",\"registration_no\":\"REG-001\",\"status\":1,\"is_deleted\":0}]}"
-            }
-          ]
+          "response": []
         },
         {
           "name": "Create Company",
@@ -463,47 +731,91 @@
             "method": "POST",
             "header": [
               {
-                "key": "Content-Type",
-                "value": "application/json"
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
               }
             ],
             "body": {
-              "mode": "raw",
-              "raw": "{\n  \"owner_id\": 1,\n  \"logo\": \"logo.png\",\n  \"email\": \"company@example.com\",\n  \"country\": \"India\",\n  \"phone\": \"1234567890\",\n  \"address\": \"Addr 1\",\n  \"registration_no\": \"REG-001\",\n  \"status\": 1\n}"
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "owner_id",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "email",
+                  "value": "company@example.com",
+                  "type": "text"
+                },
+                {
+                  "key": "phone",
+                  "value": "+1234567890",
+                  "type": "text"
+                },
+                {
+                  "key": "country",
+                  "value": "US",
+                  "type": "text"
+                },
+                {
+                  "key": "address",
+                  "value": "123 Business Ave",
+                  "type": "text"
+                },
+                {
+                  "key": "registration_no",
+                  "value": "REG-12345",
+                  "type": "text"
+                },
+                {
+                  "key": "status",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "logo",
+                  "type": "file",
+                  "src": "",
+                  "description": "Company logo image (optional)"
+                }
+              ]
             },
             "url": {
-              "raw": "{{baseUrl}}/companies",
-              "host": ["{{baseUrl}}"],
-              "path": ["companies"]
-            }
+              "raw": "{{base_url}}/companies",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "companies"
+              ]
+            },
+            "description": "Send as multipart/form-data. Logo is optional."
           },
-          "response": [
-            {
-              "name": "Create Company Success",
-              "status": "Created",
-              "code": 201,
-              "body": "{\"success\":true,\"data\":{\"id\":1,\"owner_id\":1,\"logo\":\"logo.png\",\"email\":\"company@example.com\",\"country\":\"India\",\"phone\":\"1234567890\",\"address\":\"Addr 1\",\"registration_no\":\"REG-001\",\"status\":1,\"is_deleted\":0}}"
-            }
-          ]
+          "response": []
         },
         {
-          "name": "Get Company By Id",
+          "name": "Get Company by ID",
           "request": {
             "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
             "url": {
-              "raw": "{{baseUrl}}/companies/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["companies", "1"]
+              "raw": "{{base_url}}/companies/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "companies",
+                "1"
+              ]
             }
           },
-          "response": [
-            {
-              "name": "Get Company Success",
-              "status": "OK",
-              "code": 200,
-              "body": "{\"success\":true,\"data\":{\"id\":1,\"owner_id\":1,\"logo\":\"logo.png\",\"email\":\"company@example.com\",\"country\":\"India\",\"phone\":\"1234567890\",\"address\":\"Addr 1\",\"registration_no\":\"REG-001\",\"status\":1,\"is_deleted\":0}}"
-            }
-          ]
+          "response": []
         },
         {
           "name": "Update Company",
@@ -511,47 +823,66 @@
             "method": "PUT",
             "header": [
               {
-                "key": "Content-Type",
-                "value": "application/json"
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
               }
             ],
             "body": {
-              "mode": "raw",
-              "raw": "{\n  \"phone\": \"1111111111\",\n  \"status\": 0\n}"
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "phone",
+                  "value": "+9876543210",
+                  "type": "text"
+                },
+                {
+                  "key": "address",
+                  "value": "456 New Address Ave",
+                  "type": "text"
+                },
+                {
+                  "key": "logo",
+                  "type": "file",
+                  "src": "",
+                  "description": "New logo image (optional)"
+                }
+              ]
             },
             "url": {
-              "raw": "{{baseUrl}}/companies/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["companies", "1"]
+              "raw": "{{base_url}}/companies/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "companies",
+                "1"
+              ]
             }
           },
-          "response": [
-            {
-              "name": "Update Company Success",
-              "status": "OK",
-              "code": 200,
-              "body": "{\"success\":true,\"data\":{\"id\":1,\"owner_id\":1,\"logo\":\"logo.png\",\"email\":\"company@example.com\",\"country\":\"India\",\"phone\":\"1111111111\",\"address\":\"Addr 1\",\"registration_no\":\"REG-001\",\"status\":0,\"is_deleted\":0}}"
-            }
-          ]
+          "response": []
         },
         {
           "name": "Delete Company",
           "request": {
             "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
             "url": {
-              "raw": "{{baseUrl}}/companies/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["companies", "1"]
+              "raw": "{{base_url}}/companies/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "companies",
+                "1"
+              ]
             }
           },
-          "response": [
-            {
-              "name": "Delete Company Success",
-              "status": "OK",
-              "code": 200,
-              "body": "{\"success\":true,\"message\":\"Company deleted successfully\"}"
-            }
-          ]
+          "response": []
         }
       ]
     },
@@ -562,20 +893,30 @@
           "name": "List Company Users",
           "request": {
             "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
             "url": {
-              "raw": "{{baseUrl}}/company-users",
-              "host": ["{{baseUrl}}"],
-              "path": ["company-users"]
+              "raw": "{{base_url}}/company-users?company_id=1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "company-users"
+              ],
+              "query": [
+                {
+                  "key": "company_id",
+                  "value": "1",
+                  "description": "Required company ID"
+                }
+              ]
             }
           },
-          "response": [
-            {
-              "name": "List Company Users Success",
-              "status": "OK",
-              "code": 200,
-              "body": "{\"success\":true,\"data\":[{\"id\":1,\"user_id\":1,\"company_id\":1,\"role_id\":1,\"status\":1,\"is_deleted\":0}]}"
-            }
-          ]
+          "response": []
         },
         {
           "name": "Create Company User",
@@ -585,45 +926,93 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
               }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"user_id\": 1,\n  \"company_id\": 1,\n  \"role_id\": 1,\n  \"status\": 1\n}"
+              "raw": "{\n  \"user_id\": 2,\n  \"company_id\": 1,\n  \"role_id\": 1,\n  \"status\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
-              "raw": "{{baseUrl}}/company-users",
-              "host": ["{{baseUrl}}"],
-              "path": ["company-users"]
-            }
+              "raw": "{{base_url}}/company-users",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "company-users"
+              ]
+            },
+            "description": ""
           },
-          "response": [
-            {
-              "name": "Create Company User Success",
-              "status": "Created",
-              "code": 201,
-              "body": "{\"success\":true,\"data\":{\"id\":1,\"user_id\":1,\"company_id\":1,\"role_id\":1,\"status\":1,\"is_deleted\":0}}"
-            }
-          ]
+          "response": []
         },
         {
-          "name": "Get Company User By Id",
+          "name": "Create Company User (alt POST /company-users/users)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": 2,\n  \"company_id\": 1,\n  \"role_id\": 1,\n  \"status\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/company-users/users",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "company-users",
+                "users"
+              ]
+            },
+            "description": "Alternate endpoint, same as POST /company-users"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Company User by ID",
           "request": {
             "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
             "url": {
-              "raw": "{{baseUrl}}/company-users/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["company-users", "1"]
+              "raw": "{{base_url}}/company-users/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "company-users",
+                "1"
+              ]
             }
           },
-          "response": [
-            {
-              "name": "Get Company User Success",
-              "status": "OK",
-              "code": 200,
-              "body": "{\"success\":true,\"data\":{\"id\":1,\"user_id\":1,\"company_id\":1,\"role_id\":1,\"status\":1,\"is_deleted\":0}}"
-            }
-          ]
+          "response": []
         },
         {
           "name": "Update Company User",
@@ -633,45 +1022,56 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
               }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"role_id\": 2,\n  \"status\": 0\n}"
+              "raw": "{\n  \"role_id\": 2,\n  \"status\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
-              "raw": "{{baseUrl}}/company-users/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["company-users", "1"]
+              "raw": "{{base_url}}/company-users/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "company-users",
+                "1"
+              ]
             }
           },
-          "response": [
-            {
-              "name": "Update Company User Success",
-              "status": "OK",
-              "code": 200,
-              "body": "{\"success\":true,\"data\":{\"id\":1,\"user_id\":1,\"company_id\":1,\"role_id\":2,\"status\":0,\"is_deleted\":0}}"
-            }
-          ]
+          "response": []
         },
         {
           "name": "Delete Company User",
           "request": {
             "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
             "url": {
-              "raw": "{{baseUrl}}/company-users/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["company-users", "1"]
+              "raw": "{{base_url}}/company-users/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "company-users",
+                "1"
+              ]
             }
           },
-          "response": [
-            {
-              "name": "Delete Company User Success",
-              "status": "OK",
-              "code": 200,
-              "body": "{\"success\":true,\"message\":\"CompanyUser deleted successfully\"}"
-            }
-          ]
+          "response": []
         }
       ]
     },
@@ -682,157 +1082,141 @@
           "name": "List Packages",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
             "url": {
-              "raw": "{{baseUrl}}/packages",
-              "host": ["{{baseUrl}}"],
-              "path": ["packages"]
+              "raw": "{{base_url}}/packages",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "packages"
+              ]
             }
           },
-          "response": [
-            {
-              "name": "List Packages Success",
-              "originalRequest": {
-                "method": "GET",
-                "url": {
-                  "raw": "{{baseUrl}}/packages",
-                  "host": ["{{baseUrl}}"],
-                  "path": ["packages"]
-                }
-              },
-              "status": "OK",
-              "code": 200,
-              "body": "{\"success\":true,\"data\":[{\"id\":1,\"name\":\"First\",\"monthly\":\"2000.00\",\"yearly\":\"10000.00\",\"status\":1,\"is_deleted\":0}]}"
-            }
-          ]
+          "response": []
         },
         {
-          "name": "Create Package",
+          "name": "Create Packages",
           "request": {
             "method": "POST",
             "header": [
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
               }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Premium\",\n  \"monthly\": 500,\n  \"yearly\": 5000,\n  \"status\": 1,\n  \"information\": [\"Includes service\", \"Road assist\"]\n}"
+              "raw": "{\n  \"name\": \"Basic Plan\",\n  \"monthly\": 29.99,\n  \"yearly\": 299.99,\n  \"status\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
-              "raw": "{{baseUrl}}/packages",
-              "host": ["{{baseUrl}}"],
-              "path": ["packages"]
-            }
+              "raw": "{{base_url}}/packages",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "packages"
+              ]
+            },
+            "description": ""
           },
-          "response": [
-            {
-              "name": "Create Package Success",
-              "originalRequest": {
-                "method": "POST",
-                "url": {
-                  "raw": "{{baseUrl}}/packages",
-                  "host": ["{{baseUrl}}"],
-                  "path": ["packages"]
-                }
-              },
-              "status": "Created",
-              "code": 201,
-              "body": "{\"success\":true,\"data\":{\"id\":2,\"name\":\"Premium\",\"monthly\":\"500.00\",\"yearly\":\"5000.00\",\"status\":1,\"is_deleted\":0}}"
-            }
-          ]
+          "response": []
         },
         {
-          "name": "Get Package By Id",
+          "name": "Get Packages by ID",
           "request": {
             "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
             "url": {
-              "raw": "{{baseUrl}}/packages/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["packages", "1"]
+              "raw": "{{base_url}}/packages/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "packages",
+                "1"
+              ]
             }
           },
-          "response": [
-            {
-              "name": "Get Package Success",
-              "originalRequest": {
-                "method": "GET",
-                "url": {
-                  "raw": "{{baseUrl}}/packages/1",
-                  "host": ["{{baseUrl}}"],
-                  "path": ["packages", "1"]
-                }
-              },
-              "status": "OK",
-              "code": 200,
-              "body": "{\"success\":true,\"data\":{\"id\":1,\"name\":\"First\",\"monthly\":\"2000.00\",\"yearly\":\"10000.00\",\"status\":1,\"is_deleted\":0}}"
-            }
-          ]
+          "response": []
         },
         {
-          "name": "Update Package",
+          "name": "Update Packages",
           "request": {
             "method": "PUT",
             "header": [
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
               }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Premium Updated\",\n  \"yearly\": 5500\n}"
+              "raw": "{\n  \"name\": \"Pro Plan\",\n  \"monthly\": 49.99,\n  \"yearly\": 499.99\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
-              "raw": "{{baseUrl}}/packages/2",
-              "host": ["{{baseUrl}}"],
-              "path": ["packages", "2"]
+              "raw": "{{base_url}}/packages/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "packages",
+                "1"
+              ]
             }
           },
-          "response": [
-            {
-              "name": "Update Package Success",
-              "originalRequest": {
-                "method": "PUT",
-                "url": {
-                  "raw": "{{baseUrl}}/packages/2",
-                  "host": ["{{baseUrl}}"],
-                  "path": ["packages", "2"]
-                }
-              },
-              "status": "OK",
-              "code": 200,
-              "body": "{\"success\":true,\"data\":{\"id\":2,\"name\":\"Premium Updated\",\"monthly\":\"500.00\",\"yearly\":\"5500.00\",\"status\":1,\"is_deleted\":0}}"
-            }
-          ]
+          "response": []
         },
         {
-          "name": "Delete Package",
+          "name": "Delete Packages",
           "request": {
             "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
             "url": {
-              "raw": "{{baseUrl}}/packages/2",
-              "host": ["{{baseUrl}}"],
-              "path": ["packages", "2"]
+              "raw": "{{base_url}}/packages/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "packages",
+                "1"
+              ]
             }
           },
-          "response": [
-            {
-              "name": "Delete Package Success",
-              "originalRequest": {
-                "method": "DELETE",
-                "url": {
-                  "raw": "{{baseUrl}}/packages/2",
-                  "host": ["{{baseUrl}}"],
-                  "path": ["packages", "2"]
-                }
-              },
-              "status": "OK",
-              "code": 200,
-              "body": "{\"success\":true,\"message\":\"Package deleted successfully\"}"
-            }
-          ]
+          "response": []
         }
       ]
     },
@@ -843,116 +1227,141 @@
           "name": "List Package Histories",
           "request": {
             "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
             "url": {
-              "raw": "{{baseUrl}}/package-histories",
-              "host": ["{{baseUrl}}"],
-              "path": ["package-histories"]
+              "raw": "{{base_url}}/package-histories",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "package-histories"
+              ]
             }
           },
-          "response": [
-            {
-              "name": "List Package Histories Success",
-              "status": "OK",
-              "code": 200,
-              "body": "{\"success\":true,\"data\":[{\"id\":2,\"package_id\":1,\"company_id\":1,\"start_date\":\"2026-08-01T00:00:00.000Z\",\"end_date\":\"2026-08-31T00:00:00.000Z\",\"status\":1,\"is_deleted\":0}]}"
-            }
-          ]
+          "response": []
         },
         {
-          "name": "Create Package History",
+          "name": "Create Package Histories",
           "request": {
             "method": "POST",
             "header": [
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
               }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"package_id\": 1,\n  \"company_id\": 1,\n  \"start_date\": \"2026-08-01\",\n  \"end_date\": \"2026-08-31\",\n  \"status\": 1\n}"
+              "raw": "{\n  \"package_id\": 1,\n  \"company_id\": 1,\n  \"start_date\": \"2026-01-01T00:00:00.000Z\",\n  \"end_date\": \"2026-12-31T23:59:59.000Z\",\n  \"status\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
-              "raw": "{{baseUrl}}/package-histories",
-              "host": ["{{baseUrl}}"],
-              "path": ["package-histories"]
-            }
+              "raw": "{{base_url}}/package-histories",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "package-histories"
+              ]
+            },
+            "description": ""
           },
-          "response": [
-            {
-              "name": "Create Package History Success",
-              "status": "Created",
-              "code": 201,
-              "body": "{\"success\":true,\"data\":{\"id\":2,\"package_id\":1,\"company_id\":1,\"start_date\":\"2026-08-01T00:00:00.000Z\",\"end_date\":\"2026-08-31T00:00:00.000Z\",\"status\":1,\"is_deleted\":0}}"
-            }
-          ]
+          "response": []
         },
         {
-          "name": "Get Package History By Id",
+          "name": "Get Package Histories by ID",
           "request": {
             "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
             "url": {
-              "raw": "{{baseUrl}}/package-histories/2",
-              "host": ["{{baseUrl}}"],
-              "path": ["package-histories", "2"]
+              "raw": "{{base_url}}/package-histories/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "package-histories",
+                "1"
+              ]
             }
           },
-          "response": [
-            {
-              "name": "Get Package History Success",
-              "status": "OK",
-              "code": 200,
-              "body": "{\"success\":true,\"data\":{\"id\":2,\"package_id\":1,\"company_id\":1,\"start_date\":\"2026-08-01T00:00:00.000Z\",\"end_date\":\"2026-08-31T00:00:00.000Z\",\"status\":1,\"is_deleted\":0}}"
-            }
-          ]
+          "response": []
         },
         {
-          "name": "Update Package History",
+          "name": "Update Package Histories",
           "request": {
             "method": "PUT",
             "header": [
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
               }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"status\": 2,\n  \"end_date\": \"2026-08-30\"\n}"
+              "raw": "{\n  \"end_date\": \"2027-12-31T23:59:59.000Z\",\n  \"status\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
-              "raw": "{{baseUrl}}/package-histories/2",
-              "host": ["{{baseUrl}}"],
-              "path": ["package-histories", "2"]
+              "raw": "{{base_url}}/package-histories/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "package-histories",
+                "1"
+              ]
             }
           },
-          "response": [
-            {
-              "name": "Update Package History Success",
-              "status": "OK",
-              "code": 200,
-              "body": "{\"success\":true,\"data\":{\"id\":2,\"package_id\":1,\"company_id\":1,\"start_date\":\"2026-08-01T00:00:00.000Z\",\"end_date\":\"2026-08-30T00:00:00.000Z\",\"status\":2,\"is_deleted\":0}}"
-            }
-          ]
+          "response": []
         },
         {
-          "name": "Delete Package History",
+          "name": "Delete Package Histories",
           "request": {
             "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
             "url": {
-              "raw": "{{baseUrl}}/package-histories/2",
-              "host": ["{{baseUrl}}"],
-              "path": ["package-histories", "2"]
+              "raw": "{{base_url}}/package-histories/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "package-histories",
+                "1"
+              ]
             }
           },
-          "response": [
-            {
-              "name": "Delete Package History Success",
-              "status": "OK",
-              "code": 200,
-              "body": "{\"success\":true,\"message\":\"PackageHistory deleted successfully\"}"
-            }
-          ]
+          "response": []
         }
       ]
     },
@@ -963,116 +1372,141 @@
           "name": "List Customers",
           "request": {
             "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              }
+            ],
             "url": {
-              "raw": "{{baseUrl}}/customers",
-              "host": ["{{baseUrl}}"],
-              "path": ["customers"]
+              "raw": "{{base_url}}/customers",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "customers"
+              ]
             }
           },
-          "response": [
-            {
-              "name": "List Customers Success",
-              "status": "OK",
-              "code": 200,
-              "body": "{\"success\":true,\"data\":[{\"id\":1,\"name\":\"Test Customer\",\"email\":\"customer@example.com\",\"phone\":\"9999999999\",\"address\":\"Test Address\",\"password_reset\":0,\"company_id\":1,\"created_by\":1,\"status\":1,\"is_deleted\":0}]}"
-            }
-          ]
+          "response": []
         },
         {
-          "name": "Create Customer",
+          "name": "Create Customers",
           "request": {
             "method": "POST",
             "header": [
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
               }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Test Customer\",\n  \"email\": \"customer@example.com\",\n  \"password\": \"123456\",\n  \"phone\": \"9999999999\",\n  \"address\": \"Test Address\",\n  \"password_reset\": 0,\n  \"company_id\": 1,\n  \"created_by\": 1,\n  \"status\": 1\n}"
+              "raw": "{\n  \"name\": \"Jane Smith\",\n  \"email\": \"jane@example.com\",\n  \"password\": \"customerpassword\",\n  \"phone\": \"+1234567890\",\n  \"address\": \"789 Customer Lane\",\n  \"company_id\": 1,\n  \"created_by\": 1,\n  \"status\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
-              "raw": "{{baseUrl}}/customers",
-              "host": ["{{baseUrl}}"],
-              "path": ["customers"]
-            }
+              "raw": "{{base_url}}/customers",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "customers"
+              ]
+            },
+            "description": ""
           },
-          "response": [
-            {
-              "name": "Create Customer Success",
-              "status": "Created",
-              "code": 201,
-              "body": "{\"success\":true,\"data\":{\"id\":1,\"name\":\"Test Customer\",\"email\":\"customer@example.com\",\"password\":\"$2b$10$...\",\"phone\":\"9999999999\",\"address\":\"Test Address\",\"password_reset\":0,\"company_id\":1,\"created_by\":1,\"status\":1,\"is_deleted\":0}}"
-            }
-          ]
+          "response": []
         },
         {
-          "name": "Get Customer By Id",
+          "name": "Get Customers by ID",
           "request": {
             "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              }
+            ],
             "url": {
-              "raw": "{{baseUrl}}/customers/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["customers", "1"]
+              "raw": "{{base_url}}/customers/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "customers",
+                "1"
+              ]
             }
           },
-          "response": [
-            {
-              "name": "Get Customer Success",
-              "status": "OK",
-              "code": 200,
-              "body": "{\"success\":true,\"data\":{\"id\":1,\"name\":\"Test Customer\",\"email\":\"customer@example.com\",\"phone\":\"9999999999\",\"address\":\"Test Address\",\"password_reset\":0,\"company_id\":1,\"created_by\":1,\"status\":1,\"is_deleted\":0}}"
-            }
-          ]
+          "response": []
         },
         {
-          "name": "Update Customer",
+          "name": "Update Customers",
           "request": {
             "method": "PUT",
             "header": [
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
               }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Updated Customer\",\n  \"phone\": \"8888888888\",\n  \"status\": 0\n}"
+              "raw": "{\n  \"name\": \"Jane Updated\",\n  \"phone\": \"+9876543210\",\n  \"address\": \"Updated Address\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
-              "raw": "{{baseUrl}}/customers/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["customers", "1"]
+              "raw": "{{base_url}}/customers/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "customers",
+                "1"
+              ]
             }
           },
-          "response": [
-            {
-              "name": "Update Customer Success",
-              "status": "OK",
-              "code": 200,
-              "body": "{\"success\":true,\"data\":{\"id\":1,\"name\":\"Updated Customer\",\"email\":\"customer@example.com\",\"phone\":\"8888888888\",\"address\":\"Test Address\",\"password_reset\":0,\"company_id\":1,\"created_by\":1,\"status\":0,\"is_deleted\":0}}"
-            }
-          ]
+          "response": []
         },
         {
-          "name": "Delete Customer",
+          "name": "Delete Customers",
           "request": {
             "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              }
+            ],
             "url": {
-              "raw": "{{baseUrl}}/customers/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["customers", "1"]
+              "raw": "{{base_url}}/customers/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "customers",
+                "1"
+              ]
             }
           },
-          "response": [
-            {
-              "name": "Delete Customer Success",
-              "status": "OK",
-              "code": 200,
-              "body": "{\"success\":true,\"message\":\"Customer deleted successfully\"}"
-            }
-          ]
+          "response": []
         }
       ]
     },
@@ -1083,116 +1517,141 @@
           "name": "List Vehicles",
           "request": {
             "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              }
+            ],
             "url": {
-              "raw": "{{baseUrl}}/vehicles",
-              "host": ["{{baseUrl}}"],
-              "path": ["vehicles"]
+              "raw": "{{base_url}}/vehicles",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "vehicles"
+              ]
             }
           },
-          "response": [
-            {
-              "name": "List Vehicles Success",
-              "status": "OK",
-              "code": 200,
-              "body": "{\"success\":true,\"data\":[{\"id\":2,\"customer_id\":2,\"name\":\"Verified Vehicle\",\"make\":\"Honda\",\"model\":\"Civic\",\"variant\":\"Sport\",\"year\":2025,\"VIN\":\"VIN-555555\",\"license_plate\":\"XYZ-999\",\"insured\":1,\"created_by\":1,\"status\":1,\"is_deleted\":0}]}"
-            }
-          ]
+          "response": []
         },
         {
-          "name": "Create Vehicle",
+          "name": "Create Vehicles",
           "request": {
             "method": "POST",
             "header": [
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
               }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"customer_id\": 2,\n  \"name\": \"Verified Vehicle\",\n  \"make\": \"Honda\",\n  \"model\": \"Civic\",\n  \"variant\": \"Sport\",\n  \"year\": 2025,\n  \"VIN\": \"VIN-555555\",\n  \"license_plate\": \"XYZ-999\",\n  \"insured\": 1,\n  \"created_by\": 1,\n  \"status\": 1,\n  \"insuranceDetails\": {\n    \"insurance_number\": \"INS-100\",\n    \"policy_number\": \"POL-100\",\n    \"expiry_date\": \"2027-01-01\",\n    \"claim_number\": \"CLM-100\",\n    \"insurance_company\": \"ABC Insurance\",\n    \"insurance_company_phone\": \"1111111111\"\n  }\n}"
+              "raw": "{\n  \"customer_id\": 1,\n  \"name\": \"My Car\",\n  \"make\": \"Toyota\",\n  \"model\": \"Camry\",\n  \"variant\": \"LE\",\n  \"year\": 2022,\n  \"VIN\": \"1HGBH41JXMN109186\",\n  \"license_plate\": \"ABC-1234\",\n  \"insured\": 0,\n  \"created_by\": 1,\n  \"status\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
-              "raw": "{{baseUrl}}/vehicles",
-              "host": ["{{baseUrl}}"],
-              "path": ["vehicles"]
-            }
+              "raw": "{{base_url}}/vehicles",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "vehicles"
+              ]
+            },
+            "description": ""
           },
-          "response": [
-            {
-              "name": "Create Vehicle Success",
-              "status": "Created",
-              "code": 201,
-              "body": "{\"success\":true,\"data\":{\"id\":2,\"customer_id\":2,\"name\":\"Verified Vehicle\",\"make\":\"Honda\",\"model\":\"Civic\",\"variant\":\"Sport\",\"year\":2025,\"VIN\":\"VIN-555555\",\"license_plate\":\"XYZ-999\",\"insured\":1,\"created_by\":1,\"status\":1,\"is_deleted\":0}}"
-            }
-          ]
+          "response": []
         },
         {
-          "name": "Get Vehicle By Id",
+          "name": "Get Vehicles by ID",
           "request": {
             "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              }
+            ],
             "url": {
-              "raw": "{{baseUrl}}/vehicles/2",
-              "host": ["{{baseUrl}}"],
-              "path": ["vehicles", "2"]
+              "raw": "{{base_url}}/vehicles/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "vehicles",
+                "1"
+              ]
             }
           },
-          "response": [
-            {
-              "name": "Get Vehicle Success",
-              "status": "OK",
-              "code": 200,
-              "body": "{\"success\":true,\"data\":{\"id\":2,\"customer_id\":2,\"name\":\"Verified Vehicle\",\"make\":\"Honda\",\"model\":\"Civic\",\"variant\":\"Sport\",\"year\":2025,\"VIN\":\"VIN-555555\",\"license_plate\":\"XYZ-999\",\"insured\":1,\"created_by\":1,\"status\":1,\"is_deleted\":0,\"insuredVehicle\":{\"id\":1,\"vehicle_id\":2,\"insurance_number\":\"INS-100\",\"policy_number\":\"POL-100\",\"expiry_date\":\"2027-01-01T00:00:00.000Z\",\"claim_number\":\"CLM-100\",\"insurance_company\":\"ABC Insurance\",\"insurance_company_phone\":\"1111111111\",\"status\":1,\"is_deleted\":0}}}"
-            }
-          ]
+          "response": []
         },
         {
-          "name": "Update Vehicle",
+          "name": "Update Vehicles",
           "request": {
             "method": "PUT",
             "header": [
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
               }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Updated Vehicle\",\n  \"insured\": 0,\n  \"status\": 0\n}"
+              "raw": "{\n  \"name\": \"Updated Car\",\n  \"license_plate\": \"XYZ-9999\",\n  \"insured\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
-              "raw": "{{baseUrl}}/vehicles/2",
-              "host": ["{{baseUrl}}"],
-              "path": ["vehicles", "2"]
+              "raw": "{{base_url}}/vehicles/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "vehicles",
+                "1"
+              ]
             }
           },
-          "response": [
-            {
-              "name": "Update Vehicle Success",
-              "status": "OK",
-              "code": 200,
-              "body": "{\"success\":true,\"data\":{\"id\":2,\"customer_id\":2,\"name\":\"Updated Vehicle\",\"make\":\"Honda\",\"model\":\"Civic\",\"variant\":\"Sport\",\"year\":2025,\"VIN\":\"VIN-555555\",\"license_plate\":\"XYZ-999\",\"insured\":0,\"created_by\":1,\"status\":0,\"is_deleted\":0}}"
-            }
-          ]
+          "response": []
         },
         {
-          "name": "Delete Vehicle",
+          "name": "Delete Vehicles",
           "request": {
             "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              }
+            ],
             "url": {
-              "raw": "{{baseUrl}}/vehicles/2",
-              "host": ["{{baseUrl}}"],
-              "path": ["vehicles", "2"]
+              "raw": "{{base_url}}/vehicles/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "vehicles",
+                "1"
+              ]
             }
           },
-          "response": [
-            {
-              "name": "Delete Vehicle Success",
-              "status": "OK",
-              "code": 200,
-              "body": "{\"success\":true,\"message\":\"Vehicle deleted successfully\"}"
-            }
-          ]
+          "response": []
         }
       ]
     },
@@ -1203,116 +1662,2244 @@
           "name": "List Insured Vehicles",
           "request": {
             "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              }
+            ],
             "url": {
-              "raw": "{{baseUrl}}/insured-vehicles",
-              "host": ["{{baseUrl}}"],
-              "path": ["insured-vehicles"]
+              "raw": "{{base_url}}/insured-vehicles",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "insured-vehicles"
+              ]
             }
           },
-          "response": [
-            {
-              "name": "List Insured Vehicles Success",
-              "status": "OK",
-              "code": 200,
-              "body": "{\"success\":true,\"data\":[{\"id\":1,\"vehicle_id\":2,\"insurance_number\":\"INS-100\",\"policy_number\":\"POL-100\",\"expiry_date\":\"2027-01-01T00:00:00.000Z\",\"claim_number\":\"CLM-100\",\"insurance_company\":\"ABC Insurance\",\"insurance_company_phone\":\"1111111111\",\"status\":1,\"is_deleted\":0}]}"
-            }
-          ]
+          "response": []
         },
         {
-          "name": "Create Insured Vehicle",
+          "name": "Create Insured Vehicles",
           "request": {
             "method": "POST",
             "header": [
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
               }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"vehicle_id\": 2,\n  \"insurance_number\": \"INS-100\",\n  \"policy_number\": \"POL-100\",\n  \"expiry_date\": \"2027-01-01\",\n  \"claim_number\": \"CLM-100\",\n  \"insurance_company\": \"ABC Insurance\",\n  \"insurance_company_phone\": \"1111111111\",\n  \"status\": 1\n}"
+              "raw": "{\n  \"vehicle_id\": 1,\n  \"insurance_number\": \"INS-001\",\n  \"policy_number\": \"POL-2026-001\",\n  \"expiry_date\": \"2027-12-31T00:00:00.000Z\",\n  \"claim_number\": \"CLM-001\",\n  \"insurance_company\": \"SafeDrive Insurance\",\n  \"insurance_company_phone\": \"+1800123456\",\n  \"status\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
-              "raw": "{{baseUrl}}/insured-vehicles",
-              "host": ["{{baseUrl}}"],
-              "path": ["insured-vehicles"]
-            }
+              "raw": "{{base_url}}/insured-vehicles",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "insured-vehicles"
+              ]
+            },
+            "description": ""
           },
-          "response": [
-            {
-              "name": "Create Insured Vehicle Success",
-              "status": "Created",
-              "code": 201,
-              "body": "{\"success\":true,\"data\":{\"id\":1,\"vehicle_id\":2,\"insurance_number\":\"INS-100\",\"policy_number\":\"POL-100\",\"expiry_date\":\"2027-01-01T00:00:00.000Z\",\"claim_number\":\"CLM-100\",\"insurance_company\":\"ABC Insurance\",\"insurance_company_phone\":\"1111111111\",\"status\":1,\"is_deleted\":0}}"
-            }
-          ]
+          "response": []
         },
         {
-          "name": "Get Insured Vehicle By Id",
+          "name": "Get Insured Vehicles by ID",
           "request": {
             "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              }
+            ],
             "url": {
-              "raw": "{{baseUrl}}/insured-vehicles/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["insured-vehicles", "1"]
+              "raw": "{{base_url}}/insured-vehicles/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "insured-vehicles",
+                "1"
+              ]
             }
           },
-          "response": [
-            {
-              "name": "Get Insured Vehicle Success",
-              "status": "OK",
-              "code": 200,
-              "body": "{\"success\":true,\"data\":{\"id\":1,\"vehicle_id\":2,\"insurance_number\":\"INS-100\",\"policy_number\":\"POL-100\",\"expiry_date\":\"2027-01-01T00:00:00.000Z\",\"claim_number\":\"CLM-100\",\"insurance_company\":\"ABC Insurance\",\"insurance_company_phone\":\"1111111111\",\"status\":1,\"is_deleted\":0}}"
-            }
-          ]
+          "response": []
         },
         {
-          "name": "Update Insured Vehicle",
+          "name": "Update Insured Vehicles",
           "request": {
             "method": "PUT",
             "header": [
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
               }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"policy_number\": \"POL-200\",\n  \"status\": 0\n}"
+              "raw": "{\n  \"expiry_date\": \"2028-12-31T00:00:00.000Z\",\n  \"claim_number\": \"CLM-002\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
-              "raw": "{{baseUrl}}/insured-vehicles/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["insured-vehicles", "1"]
+              "raw": "{{base_url}}/insured-vehicles/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "insured-vehicles",
+                "1"
+              ]
             }
           },
-          "response": [
-            {
-              "name": "Update Insured Vehicle Success",
-              "status": "OK",
-              "code": 200,
-              "body": "{\"success\":true,\"data\":{\"id\":1,\"vehicle_id\":2,\"insurance_number\":\"INS-100\",\"policy_number\":\"POL-200\",\"expiry_date\":\"2027-01-01T00:00:00.000Z\",\"claim_number\":\"CLM-100\",\"insurance_company\":\"ABC Insurance\",\"insurance_company_phone\":\"1111111111\",\"status\":0,\"is_deleted\":0}}"
-            }
-          ]
+          "response": []
         },
         {
-          "name": "Delete Insured Vehicle",
+          "name": "Delete Insured Vehicles",
           "request": {
             "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              }
+            ],
             "url": {
-              "raw": "{{baseUrl}}/insured-vehicles/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["insured-vehicles", "1"]
+              "raw": "{{base_url}}/insured-vehicles/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "insured-vehicles",
+                "1"
+              ]
             }
           },
-          "response": [
-            {
-              "name": "Delete Insured Vehicle Success",
-              "status": "OK",
-              "code": 200,
-              "body": "{\"success\":true,\"message\":\"InsuredVehicle deleted successfully\"}"
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Appointments",
+      "item": [
+        {
+          "name": "List Appointments",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/appointments?company_id=1&status=pending",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "appointments"
+              ],
+              "query": [
+                {
+                  "key": "company_id",
+                  "value": "1",
+                  "description": "Filter by company ID (optional)"
+                },
+                {
+                  "key": "status",
+                  "value": "pending",
+                  "description": "Filter by status: pending|confirmed|completed|cancelled|no_show (optional)"
+                }
+              ]
             }
-          ]
+          },
+          "response": []
+        },
+        {
+          "name": "Create Appointment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"company_id\": 1,\n  \"customer_name\": \"John Smith\",\n  \"customer_phone\": \"+1234567890\",\n  \"VIN\": 12345678901234568,\n  \"license_plate\": \"ABC-1234\",\n  \"reservation_date\": \"2026-09-01T10:00:00.000Z\",\n  \"note\": \"Oil change and brake inspection\",\n  \"status\": \"pending\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/appointments",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "appointments"
+              ]
+            },
+            "description": "status: pending|confirmed|completed|cancelled|no_show"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Appointment by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/appointments/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "appointments",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Appointment",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"confirmed\",\n  \"note\": \"Confirmed – bring vehicle by 10am\",\n  \"reservation_date\": \"2026-09-02T09:00:00.000Z\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/appointments/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "appointments",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Appointment",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/appointments/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "appointments",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Quotations",
+      "item": [
+        {
+          "name": "List Quotations",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/quotations",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "quotations"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Quotation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "company_id",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "quotation_number",
+                  "value": "QUO-2026-001",
+                  "type": "text"
+                },
+                {
+                  "key": "vehicle_id",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "mileage",
+                  "value": "15000",
+                  "type": "text"
+                },
+                {
+                  "key": "note",
+                  "value": "Full service required",
+                  "type": "text"
+                },
+                {
+                  "key": "quotation_status",
+                  "value": "draft",
+                  "type": "text",
+                  "description": "draft|pending|approved|rejected|cancelled"
+                },
+                {
+                  "key": "subtotal",
+                  "value": "500.00",
+                  "type": "text"
+                },
+                {
+                  "key": "discount",
+                  "value": "50.00",
+                  "type": "text"
+                },
+                {
+                  "key": "tax_percentage",
+                  "value": "10.00",
+                  "type": "text"
+                },
+                {
+                  "key": "tax_amount",
+                  "value": "45.00",
+                  "type": "text"
+                },
+                {
+                  "key": "total",
+                  "value": "495.00",
+                  "type": "text"
+                },
+                {
+                  "key": "creation_date",
+                  "value": "2026-08-13",
+                  "type": "text"
+                },
+                {
+                  "key": "created_by",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "documents",
+                  "type": "file",
+                  "src": "",
+                  "description": "Optional document files (multi-upload)"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/quotations",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "quotations"
+              ]
+            },
+            "description": "Send as multipart/form-data. quotation_status: draft|pending|approved|rejected|cancelled"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Quotation by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/quotations/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "quotations",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Quotation",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "quotation_status",
+                  "value": "approved",
+                  "type": "text"
+                },
+                {
+                  "key": "note",
+                  "value": "Approved by customer",
+                  "type": "text"
+                },
+                {
+                  "key": "updated_by",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "documents",
+                  "type": "file",
+                  "src": "",
+                  "description": "New documents to add (optional)"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/quotations/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "quotations",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Quotation",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/quotations/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "quotations",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Task Cards",
+      "item": [
+        {
+          "name": "List Task Cards",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/task-cards",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "task-cards"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Task Cards",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"company_id\": 1,\n  \"quotation_id\": 1,\n  \"created_by\": 1,\n  \"status\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/task-cards",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "task-cards"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Get Task Cards by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/task-cards/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "task-cards",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Task Cards",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": 1,\n  \"updated_by\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/task-cards/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "task-cards",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Task Cards",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/task-cards/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "task-cards",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Tasks",
+      "item": [
+        {
+          "name": "List Tasks",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/tasks",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tasks"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Tasks",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"task_card_id\": 1,\n  \"type\": \"service\",\n  \"description\": \"Oil change – 5W-30 synthetic\",\n  \"qty\": 1,\n  \"task_status\": \"pending\",\n  \"created_by\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/tasks",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tasks"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Get Tasks by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/tasks/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tasks",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Tasks",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"task_status\": \"Inprogress\",\n  \"qty\": 2,\n  \"updated_by\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/tasks/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tasks",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Tasks",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/tasks/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tasks",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Task Assignments",
+      "item": [
+        {
+          "name": "List Task Assignments",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/task-assignments",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "task-assignments"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Task Assignments",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"task_id\": 1,\n  \"user_id\": 1,\n  \"status\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/task-assignments",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "task-assignments"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Get Task Assignments by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/task-assignments/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "task-assignments",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Task Assignments",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": 2,\n  \"status\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/task-assignments/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "task-assignments",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Task Assignments",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/task-assignments/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "task-assignments",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Invoices",
+      "item": [
+        {
+          "name": "List Invoices",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/invoices",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "invoices"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Invoices",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"company_id\": 1,\n  \"task_card_id\": 1,\n  \"invoice_status\": \"draft\",\n  \"payment_status\": \"pending\",\n  \"subtotal\": 500,\n  \"discount\": 50,\n  \"tax_percentage\": 10,\n  \"tax_amount\": 45,\n  \"total\": 495,\n  \"creation_date\": \"2026-08-13\",\n  \"created_by\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/invoices",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "invoices"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Get Invoices by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/invoices/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "invoices",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Invoices",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"invoice_status\": \"approved\",\n  \"payment_status\": \"completed\",\n  \"updated_by\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/invoices/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "invoices",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Invoices",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/invoices/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "invoices",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Invoice Payments",
+      "item": [
+        {
+          "name": "List Invoice Payments",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/invoice-payments",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "invoice-payments"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Invoice Payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "company_id",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "invoice_id",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "total_amount",
+                  "value": "495.00",
+                  "type": "text"
+                },
+                {
+                  "key": "paid_amount",
+                  "value": "495.00",
+                  "type": "text"
+                },
+                {
+                  "key": "balance_amount",
+                  "value": "0.00",
+                  "type": "text"
+                },
+                {
+                  "key": "payment_method",
+                  "value": "card",
+                  "type": "text",
+                  "description": "cash|card|bank_transfer|online"
+                },
+                {
+                  "key": "payment_status",
+                  "value": "pending",
+                  "type": "text",
+                  "description": "pending|not_verified|verified|rejected"
+                },
+                {
+                  "key": "payment_done_by",
+                  "value": "customer",
+                  "type": "text",
+                  "description": "company|customer"
+                },
+                {
+                  "key": "created_by",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "picture",
+                  "type": "file",
+                  "src": "",
+                  "description": "Proof of payment image (optional)"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/invoice-payments",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "invoice-payments"
+              ]
+            },
+            "description": "Supports optional proof-of-payment image upload."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Invoice Payment by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/invoice-payments/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "invoice-payments",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Invoice Payment",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "payment_status",
+                  "value": "verified",
+                  "type": "text"
+                },
+                {
+                  "key": "verified_by",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "picture",
+                  "type": "file",
+                  "src": "",
+                  "description": "Updated proof image (optional)"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/invoice-payments/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "invoice-payments",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Invoice Payment",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/invoice-payments/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "invoice-payments",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Customer Reviews",
+      "item": [
+        {
+          "name": "List Customer Reviews",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/customer-reviews",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "customer-reviews"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Customer Reviews",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"task_card_id\": 1,\n  \"company_id\": 1,\n  \"rating\": 5,\n  \"review\": \"Excellent service! The car looks brand new.\",\n  \"created_by\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/customer-reviews",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "customer-reviews"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Get Customer Reviews by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/customer-reviews/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "customer-reviews",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Customer Reviews",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rating\": 4,\n  \"review\": \"Great service but took a bit longer than expected.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/customer-reviews/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "customer-reviews",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Customer Reviews",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/customer-reviews/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "customer-reviews",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Vehicle Maintenance Pictures",
+      "item": [
+        {
+          "name": "List Vehicle Maintenance Pictures",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/vehicle-maintenance-pictures",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "vehicle-maintenance-pictures"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Vehicle Maintenance Pictures",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "task_card_id",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "company_id",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "picture_tag",
+                  "value": "before",
+                  "type": "text",
+                  "description": "before|after"
+                },
+                {
+                  "key": "created_by",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "pictures",
+                  "type": "file",
+                  "src": [],
+                  "description": "Multiple files under field 'pictures'"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/vehicle-maintenance-pictures",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "vehicle-maintenance-pictures"
+              ]
+            },
+            "description": "picture_tag: before|after. Supports multiple file upload under field pictures."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Vehicle Maintenance Picture by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/vehicle-maintenance-pictures/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "vehicle-maintenance-pictures",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Vehicle Maintenance Pictures",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "picture_tag",
+                  "value": "after",
+                  "type": "text"
+                },
+                {
+                  "key": "updated_by",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "pictures",
+                  "type": "file",
+                  "src": [],
+                  "description": "New pictures to add (optional)"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/vehicle-maintenance-pictures/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "vehicle-maintenance-pictures",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Vehicle Maintenance Picture",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/vehicle-maintenance-pictures/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "vehicle-maintenance-pictures",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Twilio SMS Settings",
+      "item": [
+        {
+          "name": "List Twilio SMS Settings",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/twilio-sms-settings",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "twilio-sms-settings"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Twilio SMS Settings",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"company_id\": 1,\n  \"sms_account_sid\": \"ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\n  \"sms_auth_token\": \"your_twilio_auth_token\",\n  \"sms_from_number\": \"+12345678901\",\n  \"created_by\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/twilio-sms-settings",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "twilio-sms-settings"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Get Twilio SMS Settings by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/twilio-sms-settings/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "twilio-sms-settings",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Twilio SMS Settings",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sms_from_number\": \"+19876543210\",\n  \"sms_auth_token\": \"new_auth_token\",\n  \"updated_by\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/twilio-sms-settings/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "twilio-sms-settings",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Twilio SMS Settings",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/twilio-sms-settings/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "twilio-sms-settings",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Twilio WhatsApp Settings",
+      "item": [
+        {
+          "name": "List Twilio WhatsApp Settings",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/twilio-whatsapp-settings",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "twilio-whatsapp-settings"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Twilio WhatsApp Settings",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"company_id\": 1,\n  \"wa_account_sid\": \"ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\n  \"wa_auth_token\": \"your_wa_auth_token\",\n  \"wa_from_number\": \"whatsapp:+14155238886\",\n  \"created_by\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/twilio-whatsapp-settings",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "twilio-whatsapp-settings"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Get Twilio WhatsApp Settings by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/twilio-whatsapp-settings/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "twilio-whatsapp-settings",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Twilio WhatsApp Settings",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"wa_from_number\": \"whatsapp:+19876543210\",\n  \"wa_auth_token\": \"new_auth_token\",\n  \"updated_by\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/twilio-whatsapp-settings/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "twilio-whatsapp-settings",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Twilio WhatsApp Settings",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/twilio-whatsapp-settings/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "twilio-whatsapp-settings",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "SendGrid Settings",
+      "item": [
+        {
+          "name": "List SendGrid Settings",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/sendgrid-settings",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "sendgrid-settings"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create SendGrid Settings",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"company_id\": 1,\n  \"sendgrid_api_key\": \"SG.xxxxxxxxxxxxxx\",\n  \"created_by\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/sendgrid-settings",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "sendgrid-settings"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Get SendGrid Settings by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/sendgrid-settings/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "sendgrid-settings",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update SendGrid Settings",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sendgrid_api_key\": \"SG.new_api_key_here\",\n  \"updated_by\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/sendgrid-settings/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "sendgrid-settings",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete SendGrid Settings",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/sendgrid-settings/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "sendgrid-settings",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Messaging",
+      "item": [
+        {
+          "name": "Send SMS (POST /sms)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Your appointment is confirmed for tomorrow at 10am.\",\n  \"company_id\": 1,\n  \"customer_id\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/sms",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "sms"
+              ]
+            },
+            "description": "Send SMS using the company's Twilio SMS credentials (from twilio_sms_settings). Customer phone is looked up from customers table."
+          },
+          "response": []
+        },
+        {
+          "name": "Send WhatsApp (POST /whatsApp-sms)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Your vehicle service is complete. Please come pick it up.\",\n  \"company_id\": 1,\n  \"customer_id\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/whatsApp-sms",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "whatsApp-sms"
+              ]
+            },
+            "description": "Send WhatsApp message using the company's Twilio WA credentials (from twilio_whatsapp_settings). Customer phone from customers table."
+          },
+          "response": []
+        },
+        {
+          "name": "Send Email (POST /email)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "message",
+                  "value": "Your invoice is ready. Please review the attached document.",
+                  "type": "text"
+                },
+                {
+                  "key": "company_id",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "customer_id",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "subject",
+                  "value": "Invoice Ready",
+                  "type": "text",
+                  "description": "Email subject (optional)"
+                },
+                {
+                  "key": "from_email",
+                  "value": "noreply@company.com",
+                  "type": "text",
+                  "description": "From email override (optional)"
+                },
+                {
+                  "key": "attachment",
+                  "type": "file",
+                  "src": "",
+                  "description": "Optional attachment file (max 10MB). Field: attachment or file"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/email",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "email"
+              ]
+            },
+            "description": "Send email using company SendGrid API key from sendgrid_settings. Customer email looked up from customers table. Optional attachment (max 10MB)."
+          },
+          "response": []
+        },
+        {
+          "name": "Send Email (POST /send-email)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "message",
+                  "value": "Hello, your appointment has been confirmed.",
+                  "type": "text"
+                },
+                {
+                  "key": "company_id",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "customer_id",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "subject",
+                  "value": "Appointment Confirmation",
+                  "type": "text",
+                  "description": "Email subject (optional)"
+                },
+                {
+                  "key": "attachment",
+                  "type": "file",
+                  "src": "",
+                  "description": "Optional attachment file (max 10MB)"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/send-email",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "send-email"
+              ]
+            },
+            "description": "Alternate endpoint for sending email. Identical to POST /email."
+          },
+          "response": []
         }
       ]
     }

@@ -3,9 +3,9 @@ const db = require('../../models');
 
 const CompanyUser = db.CompanyUser;
 
-const listCompanyUsers = async () => {
+const listCompanyUsers = async (company_id) => {
   return CompanyUser.findAll({
-    where: { is_deleted: 0 },
+    where: { company_id, is_deleted: 0 },
     include: [
       {
         model: db.Users,

@@ -5,7 +5,7 @@ const router = express.Router();
 
 router.get('/', companyUserController.getCompanyUsers);
 router.post('/', companyUserController.createCompanyUser);
-router.post('/users', companyUserController.createCompanyUser);
+// router.post('/users', companyUserController.createCompanyUser);
 router.get('/:id', companyUserController.getCompanyUser);
 router.put('/:id', companyUserController.updateCompanyUser);
 router.delete('/:id', companyUserController.deleteCompanyUser);

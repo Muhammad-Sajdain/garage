@@ -2,7 +2,12 @@ const companyUserService = require('../services/companyUserService');
 
 const getCompanyUsers = async (req, res) => {
   try {
-    const companyUsers = await companyUserService.listCompanyUsers();
+    const { company_id } = req.query;
+    if (!company_id) {
+      return res.status(400).json({ success: false, message: 'company_id query parameter is required' });
+    }
+
+    const companyUsers = await companyUserService.listCompanyUsers(company_id);
     res.json({ success: true, data: companyUsers });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
