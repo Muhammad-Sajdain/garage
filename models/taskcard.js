@@ -14,6 +14,7 @@ module.exports = (sequelize, DataTypes) => {
   });
 
   TaskCard.associate = models => {
+    TaskCard.belongsTo(models.Quotation, { foreignKey: 'quotation_id', as: 'quotation' });
     TaskCard.hasMany(models.Task, { foreignKey: 'task_card_id', as: 'tasks' });
   };
 

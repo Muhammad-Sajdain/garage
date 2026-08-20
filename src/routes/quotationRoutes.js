@@ -7,6 +7,9 @@ const upload = require('../middleware/quotationUploadMiddleware');
 // List all quotations (optionally with query filters)
 router.get('/', quotationController.listQuotations);
 
+// Download an uploaded quotation document as an attachment
+router.get('/documents/:documentId/download', quotationController.downloadQuotationDocument);
+
 // Get a single quotation by id
 router.get('/:id', quotationController.getQuotation);
 
