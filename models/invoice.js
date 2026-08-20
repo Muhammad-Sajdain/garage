@@ -22,6 +22,7 @@ module.exports = (sequelize, DataTypes) => {
   });
 
   Invoice.associate = models => {
+    Invoice.belongsTo(models.TaskCard, { foreignKey: 'task_card_id', as: 'taskCard' });
     Invoice.hasMany(models.InvoiceDetail, { foreignKey: 'invoice_id', as: 'details' });
   };
 

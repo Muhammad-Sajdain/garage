@@ -1,28 +1,50 @@
 // src/services/invoiceService.js
 const db = require('../../models');
-const { Invoice, InvoiceDetail } = db;
+const { Invoice, InvoiceDetail, TaskCard, Quotation, Vehicle, Customer } = db;
+
+const invoiceIncludes = [
+  { model: InvoiceDetail, as: 'details' },
+  {
+    model: TaskCard,
+    as: 'taskCard',
+    include: [{
+      model: Quotation,
+      as: 'quotation',
+      include: [{
+        model: Vehicle,
+        as: 'vehicle',
+        include: [{ model: Customer, as: 'customer' }],
+      }],
+    }],
+  },
+];
+
+const normalizeInvoiceFilters = ({ task_id, ...filters } = {}) => (
+  task_id === undefined ? filters : { ...filters, task_card_id: task_id }
+);
 
 // Helper to fetch invoice with details
 const getInvoiceById = async (id) => {
   return Invoice.findOne({
     where: { id, is_deleted: 0 },
-    include: [{ model: InvoiceDetail, as: 'details' }]
+    include: invoiceIncludes,
   });
 };
 
 // List invoices (optional filters)
 const listInvoices = async (filters = {}) => {
-  const where = { is_deleted: 0, ...filters };
-  return Invoice.findAll({ where, include: [{ model: InvoiceDetail, as: 'details' }], order: [['id', 'ASC']] });
+  const where = { is_deleted: 0, ...normalizeInvoiceFilters(filters) };
+  return Invoice.findAll({ where, include: invoiceIncludes, order: [['id', 'ASC']] });
 };
 
 // Create invoice with nested details
 const createInvoice = async (payload) => {
-  const { company_id, task_card_id, invoice_status = 'draft', payment_status = 'pending', subtotal, discount, tax_amount, tax_percentage, total, creation_date, created_by, updated_by = null, is_deleted = 0, details = [] } = payload;
+  const { company_id, task_card_id, task_id, invoice_status = 'draft', payment_status = 'pending', subtotal, discount, tax_amount, tax_percentage, total, creation_date, created_by, updated_by = null, is_deleted = 0, details = [] } = payload;
+  const taskCardId = task_id ?? task_card_id;
 
   const invoice = await Invoice.create({
     company_id,
-    task_card_id,
+    task_card_id: taskCardId,
     invoice_status,
     payment_status,
     subtotal,
@@ -62,7 +84,7 @@ const updateInvoice = async (id, payload) => {
   const invoice = await Invoice.findOne({ where: { id, is_deleted: 0 } });
   if (!invoice) throw new Error('Invoice not found');
 
-  const { company_id, task_card_id, details = [], ...updatable } = payload;
+  const { company_id, task_card_id, task_id, details = [], ...updatable } = payload;
   await invoice.update(updatable);
 
   // Sync details

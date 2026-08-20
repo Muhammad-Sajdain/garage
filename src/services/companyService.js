@@ -10,7 +10,7 @@ const convertToWebp = async (file) => {
   const originalPath = file.path;
   const filenameWithoutExt = path.basename(file.filename, path.extname(file.filename));
   const webpFilename = `${filenameWithoutExt}.webp`;
-  const webpPath = path.join(__dirname, '../../company_logo', webpFilename);
+  const webpPath = path.join(__dirname, '../../uploads/company_logo', webpFilename);
 
   await sharp(originalPath)
     .webp({ quality: 80 })
@@ -23,7 +23,7 @@ const deleteCompanyLogoFiles = (logoFilename) => {
   if (!logoFilename) return;
   if (logoFilename.startsWith('http://') || logoFilename.startsWith('https://')) return;
 
-  const webpPath = path.join(__dirname, '../../company_logo', logoFilename);
+  const webpPath = path.join(__dirname, '../../uploads/company_logo', logoFilename);
   try {
     if (fs.existsSync(webpPath)) {
       fs.unlinkSync(webpPath);
@@ -33,7 +33,7 @@ const deleteCompanyLogoFiles = (logoFilename) => {
   }
 
   try {
-    const originalDir = path.join(__dirname, '../../original_company_logo');
+    const originalDir = path.join(__dirname, '../../uploads/original_company_logo');
     const uniqueSuffix = logoFilename.replace(/\.webp$/, '');
     if (fs.existsSync(originalDir)) {
       const files = fs.readdirSync(originalDir);
@@ -122,7 +122,7 @@ const createCompany = async (payload, file) => {
       try { fs.unlinkSync(file.path); } catch (e) {}
     }
     if (newWebpFilename) {
-      const webpPath = path.join(__dirname, '../../company_logo', newWebpFilename);
+      const webpPath = path.join(__dirname, '../../uploads/company_logo', newWebpFilename);
       try { fs.unlinkSync(webpPath); } catch (e) {}
     }
     throw error;
@@ -166,7 +166,7 @@ const updateCompany = async (id, payload, file) => {
       try { fs.unlinkSync(file.path); } catch (e) {}
     }
     if (newWebpFilename) {
-      const webpPath = path.join(__dirname, '../../company_logo', newWebpFilename);
+      const webpPath = path.join(__dirname, '../../uploads/company_logo', newWebpFilename);
       try { fs.unlinkSync(webpPath); } catch (e) {}
     }
     throw error;

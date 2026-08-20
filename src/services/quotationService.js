@@ -1,16 +1,23 @@
 // src/services/quotationService.js
 const db = require('../../models');
-const { Quotation, QuotationDetail, QuotationDocument } = db;
+const { Quotation, QuotationDetail, QuotationDocument, Vehicle, Customer } = db;
+
+const quotationIncludes = [
+  { model: QuotationDetail, as: 'details', where: { is_deleted: 0 }, required: false },
+  { model: QuotationDocument, as: 'documents', where: { is_deleted: 0 }, required: false },
+  {
+    model: Vehicle,
+    as: 'vehicle',
+    include: [{ model: Customer, as: 'customer' }],
+  },
+];
 
 // List quotations with optional filters, include details & documents
 const listQuotations = async (filters = {}) => {
   const where = { is_deleted: 0, ...filters };
   return Quotation.findAll({
     where,
-    include: [
-      { model: QuotationDetail, as: 'details' },
-      { model: QuotationDocument, as: 'documents' },
-    ],
+    include: quotationIncludes,
     order: [['id', 'ASC']],
   });
 };
@@ -19,11 +26,12 @@ const listQuotations = async (filters = {}) => {
 const getQuotationById = async (id) => {
   return Quotation.findOne({
     where: { id, is_deleted: 0 },
-    include: [
-      { model: QuotationDetail, as: 'details' },
-      { model: QuotationDocument, as: 'documents' },
-    ],
+    include: quotationIncludes,
   });
+};
+
+const getQuotationDocumentById = async (documentId) => {
+  return QuotationDocument.findOne({ where: { id: documentId, is_deleted: 0 } });
 };
 
 // Create quotation with optional file uploads
@@ -95,16 +103,23 @@ const updateQuotation = async (id, payload, files = []) => {
 
   // Update main fields
   // Prevent company_id from being changed during update
-  const { company_id, ...updatableFields } = payload;
+  const detailsProvided = Object.prototype.hasOwnProperty.call(payload, 'details');
+  if (detailsProvided && !Array.isArray(payload.details)) {
+    throw new Error('Quotation details must be an array');
+  }
+
+  const { company_id, details, ...updatableFields } = payload;
   await quotation.update(updatableFields);
 
   // Replace details if payload contains a 'details' array
-  if (payload.details) {
+  if (detailsProvided) {
     // Soft‑delete existing details
-    await QuotationDetail.update({ is_deleted: 1 }, { where: { quotation_id: id } });
+    await QuotationDetail.update({ is_deleted: 1 }, { where: { quotation_id: id, is_deleted: 0 } });
     // Insert new ones
-    const newDetails = payload.details.map(d => ({ ...d, quotation_id: id }));
-    await QuotationDetail.bulkCreate(newDetails);
+    if (details.length) {
+      const newDetails = details.map(d => ({ ...d, quotation_id: id }));
+      await QuotationDetail.bulkCreate(newDetails);
+    }
   }
 
   // Add any new uploaded documents (keep existing ones)
@@ -130,6 +145,7 @@ const deleteQuotation = async (id) => {
 module.exports = {
   listQuotations,
   getQuotationById,
+  getQuotationDocumentById,
   createQuotation,
   updateQuotation,
   deleteQuotation,

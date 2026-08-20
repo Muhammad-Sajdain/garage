@@ -3,9 +3,12 @@ const db = require('../../models');
 const Vehicle = db.Vehicle;
 const InsuredVehicle = db.InsuredVehicle;
 
-const listVehicles = async () => {
+const listVehicles = async (customer_id) => {
   return Vehicle.findAll({
-    where: { is_deleted: 0 },
+    where: {
+      is_deleted: 0,
+      ...(customer_id ? { customer_id } : {}),
+    },
     include: [{
       model: InsuredVehicle,
       as: 'insuredVehicle',

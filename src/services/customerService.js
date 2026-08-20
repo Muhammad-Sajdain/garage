@@ -3,9 +3,12 @@ const db = require('../../models');
 
 const Customer = db.Customer;
 
-const listCustomers = async () => {
+const listCustomers = async (company_id) => {
   return Customer.findAll({
-    where: { is_deleted: 0 },
+    where: {
+      is_deleted: 0,
+      ...(company_id ? { company_id } : {}),
+    },
     order: [['id', 'ASC']],
   });
 };

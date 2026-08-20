@@ -24,6 +24,7 @@ module.exports = (sequelize, DataTypes) => {
   });
 
   Quotation.associate = models => {
+    Quotation.belongsTo(models.Vehicle, { foreignKey: 'vehicle_id', as: 'vehicle' });
     Quotation.hasMany(models.QuotationDetail, { foreignKey: 'quotation_id', as: 'details' });
     Quotation.hasMany(models.QuotationDocument, { foreignKey: 'quotation_id', as: 'documents' });
   };

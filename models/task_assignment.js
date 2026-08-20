@@ -11,5 +11,9 @@ module.exports = (sequelize, DataTypes) => {
     timestamps: true,
   });
 
+  TaskAssignment.associate = models => {
+    TaskAssignment.belongsTo(models.Task, { foreignKey: 'task_id', as: 'task' });
+  };
+
   return TaskAssignment;
 };
