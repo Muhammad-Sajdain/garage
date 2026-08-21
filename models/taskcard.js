@@ -4,6 +4,7 @@ module.exports = (sequelize, DataTypes) => {
   const TaskCard = sequelize.define('TaskCard', {
     company_id: { type: DataTypes.INTEGER, allowNull: false },
     quotation_id: { type: DataTypes.INTEGER, allowNull: false },
+    task_cards_number: { type: DataTypes.STRING, allowNull: true },
     status: { type: DataTypes.TINYINT, allowNull: false, defaultValue: 1 },
     is_deleted: { type: DataTypes.TINYINT, allowNull: false, defaultValue: 0 },
     created_by: { type: DataTypes.INTEGER, allowNull: false },

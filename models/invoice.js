@@ -4,6 +4,7 @@ module.exports = (sequelize, DataTypes) => {
   const Invoice = sequelize.define('Invoice', {
     company_id: { type: DataTypes.INTEGER, allowNull: false },
     task_card_id: { type: DataTypes.INTEGER, allowNull: false },
+    invoice_number: { type: DataTypes.STRING, allowNull: true },
     invoice_status: { type: DataTypes.ENUM('draft','pending','approved'), allowNull: false, defaultValue: 'draft' },
     payment_status: { type: DataTypes.ENUM('pending','completed'), allowNull: false, defaultValue: 'pending' },
     subtotal: { type: DataTypes.DECIMAL(10,2), allowNull: false },
