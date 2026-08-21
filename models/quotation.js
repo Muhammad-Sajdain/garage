@@ -10,6 +10,7 @@ module.exports = (sequelize, DataTypes) => {
     quotation_status: { type: DataTypes.ENUM('draft','pending','approved','rejected','cancelled'), allowNull: false, defaultValue: 'draft' },
     subtotal: { type: DataTypes.DECIMAL(10,2), allowNull: false },
     discount: { type: DataTypes.DECIMAL(10,2), allowNull: true },
+    discount_percentage: { type: DataTypes.DECIMAL(5,2), allowNull: true },
     tax_amount: { type: DataTypes.DECIMAL(10,2), allowNull: true },
     tax_percentage: { type: DataTypes.DECIMAL(5,2), allowNull: true },
     total: { type: DataTypes.DECIMAL(10,2), allowNull: false },

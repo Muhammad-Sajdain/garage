@@ -44,8 +44,8 @@ const getTaskCardById = async (id) => {
 
 // Create a task card (optionally with tasks)
 const createTaskCard = async (payload) => {
-  const { company_id, quotation_id, status = 1, created_by, updated_by = null, is_deleted = 0, tasks = [] } = payload;
-  const newCard = await TaskCard.create({ company_id, quotation_id, status, created_by, updated_by, is_deleted });
+  const { company_id, quotation_id, task_cards_number, status = 1, created_by, updated_by = null, is_deleted = 0, tasks = [] } = payload;
+  const newCard = await TaskCard.create({ company_id, quotation_id, task_cards_number, status, created_by, updated_by, is_deleted });
   // create associated tasks if provided
   if (Array.isArray(tasks) && tasks.length) {
     const taskRows = tasks.map(t => ({

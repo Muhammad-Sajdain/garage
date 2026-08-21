@@ -75,6 +75,7 @@ const getCompanyById = async (id) => {
 const createCompany = async (payload, file) => {
   const {
     owner_id,
+    name,
     email,
     country,
     phone,
@@ -96,6 +97,7 @@ const createCompany = async (payload, file) => {
   try {
     const company = await Company.create({
       owner_id,
+      name,
       logo: logoFilename,
       email,
       country,

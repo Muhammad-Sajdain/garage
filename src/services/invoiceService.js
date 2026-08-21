@@ -39,12 +39,13 @@ const listInvoices = async (filters = {}) => {
 
 // Create invoice with nested details
 const createInvoice = async (payload) => {
-  const { company_id, task_card_id, task_id, invoice_status = 'draft', payment_status = 'pending', subtotal, discount, tax_amount, tax_percentage, total, creation_date, created_by, updated_by = null, is_deleted = 0, details = [] } = payload;
+  const { company_id, task_card_id, task_id, invoice_number, invoice_status = 'draft', payment_status = 'pending', subtotal, discount, tax_amount, tax_percentage, total, creation_date, created_by, updated_by = null, is_deleted = 0, details = [] } = payload;
   const taskCardId = task_id ?? task_card_id;
 
   const invoice = await Invoice.create({
     company_id,
     task_card_id: taskCardId,
+    invoice_number,
     invoice_status,
     payment_status,
     subtotal,
