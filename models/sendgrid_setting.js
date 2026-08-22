@@ -4,6 +4,7 @@ module.exports = (sequelize, DataTypes) => {
   const SendgridSetting = sequelize.define('SendgridSetting', {
     company_id: { type: DataTypes.INTEGER, allowNull: false },
     sendgrid_api_key: { type: DataTypes.TEXT, allowNull: false },
+    email: { type: DataTypes.STRING(255), allowNull: false },
     status: { type: DataTypes.TINYINT, allowNull: false, defaultValue: 1 },
     is_deleted: { type: DataTypes.TINYINT, allowNull: false, defaultValue: 0 },
     created_by: { type: DataTypes.INTEGER, allowNull: false },
@@ -12,5 +13,13 @@ module.exports = (sequelize, DataTypes) => {
     tableName: 'sendgrid_settings',
     timestamps: true
   });
+
+  SendgridSetting.associate = models => {
+    SendgridSetting.belongsTo(models.Company, {
+      foreignKey: 'company_id',
+      as: 'company',
+    });
+  };
+
   return SendgridSetting;
 };

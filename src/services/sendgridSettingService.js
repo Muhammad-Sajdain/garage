@@ -1,6 +1,6 @@
 // src/services/sendgridSettingService.js
 const db = require('../../models');
-const { SendgridSetting } = db;
+const { SendgridSetting, Company } = db;
 
 class SendgridSettingService {
   // Create a new SendGrid setting
@@ -19,7 +19,10 @@ class SendgridSettingService {
     const where = { is_deleted: 0 };
     if (query.company_id) where.company_id = query.company_id;
     if (query.status) where.status = query.status;
-    return await SendgridSetting.findAll({ where });
+    return await SendgridSetting.findAll({
+      where,
+      include: [{ model: Company, as: 'company', attributes: ['id', 'name'] }],
+    });
   }
 
   // Update an existing setting

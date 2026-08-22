@@ -2,6 +2,7 @@ const bcrypt = require('bcrypt');
 const db = require('../../models');
 
 const Users = db.Users;
+const DEFAULT_USER_PASSWORD = 'garage@123';
 
 const listUsers = async () => {
   return Users.findAll({
@@ -21,13 +22,12 @@ const createUser = async (payload) => {
     name,
     country,
     email,
-    password,
     phone,
     address,
     status = 1,
   } = payload;
 
-  const hashedPassword = await bcrypt.hash(password, 10);
+  const hashedPassword = await bcrypt.hash(DEFAULT_USER_PASSWORD, 10);
 
   return Users.create({
     name,

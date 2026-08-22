@@ -15,6 +15,12 @@ module.exports = (sequelize, DataTypes) => {
     timestamps: true
   });
 
-  // define any associations here if needed
+  TwilioSmsSetting.associate = models => {
+    TwilioSmsSetting.belongsTo(models.Company, {
+      foreignKey: 'company_id',
+      as: 'company',
+    });
+  };
+
   return TwilioSmsSetting;
 };

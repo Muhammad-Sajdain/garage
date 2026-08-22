@@ -113,7 +113,7 @@ class SendgridEmailSendService {
     }
 
     // 3. Determine sender email
-    let senderEmail = fromEmail || setting.from_email || setting.sender_email;
+    let senderEmail = fromEmail || setting.email || setting.from_email || setting.sender_email;
     if (!senderEmail) {
       const company = await Company.findOne({
         where: { id: companyId, is_deleted: 0 },

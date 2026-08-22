@@ -2,7 +2,7 @@
 const path = require('path');
 const fs = require('fs');
 const db = require('../../models');
-const { InvoicePayment, Invoice } = db;
+const { InvoicePayment, Invoice, Sales } = db;
 
 // Helper to fetch a payment with its invoice association
 const getPaymentById = async (id) => {
@@ -53,6 +53,23 @@ const createPayment = async (payload, file) => {
     is_deleted,
     status: 1 // implicit active status
   });
+
+  if (payment_status === 'verified') {
+    await Sales.create({
+      company_id,
+      invoice_id,
+      amount: paid_amount,
+      status: 1,
+      is_deleted: 0,
+    });
+  }
+
+  if (Number(balance_amount) === 0) {
+    await Invoice.update(
+      { payment_status: 'completed' },
+      { where: { id: invoice_id, is_deleted: 0 } },
+    );
+  }
 
   return getPaymentById(payment.id);
 };

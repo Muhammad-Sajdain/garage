@@ -1,6 +1,6 @@
 // src/services/twilioWhatsappSettingService.js
 const db = require('../../models');
-const { TwilioWhatsappSetting } = db;
+const { TwilioWhatsappSetting, Company } = db;
 
 class TwilioWhatsappSettingService {
   // Create a new setting
@@ -19,7 +19,10 @@ class TwilioWhatsappSettingService {
     const where = { is_deleted: 0 };
     if (query.company_id) where.company_id = query.company_id;
     if (query.status) where.status = query.status;
-    return await TwilioWhatsappSetting.findAll({ where });
+    return await TwilioWhatsappSetting.findAll({
+      where,
+      include: [{ model: Company, as: 'company', attributes: ['id', 'name'] }],
+    });
   }
 
   // Update a setting

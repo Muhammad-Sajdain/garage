@@ -1,13 +1,23 @@
 'use strict';
 
-const { TaskAssignment, Task, TaskCard, Users } = require('../../models');
+const { TaskAssignment, Task, TaskCard, Quotation, Vehicle, Users } = require('../../models');
 
 const assignmentIncludes = [
   {
     model: Task,
     as: 'task',
     required: false,
-    include: [{ model: TaskCard, as: 'taskCard', required: false }],
+    include: [{
+      model: TaskCard,
+      as: 'taskCard',
+      required: false,
+      include: [{
+        model: Quotation,
+        as: 'quotation',
+        required: false,
+        include: [{ model: Vehicle, as: 'vehicle', required: false }],
+      }],
+    }],
   },
   {
     model: Users,

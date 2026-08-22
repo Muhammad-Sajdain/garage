@@ -5,6 +5,21 @@ const db = require('../../models');
 
 const Company = db.Company;
 const CompanyUser = db.CompanyUser;
+const Users = db.Users;
+
+const companyIncludes = [
+  {
+    model: Users,
+    as: 'owner',
+    attributes: ['id', 'name'],
+  },
+  {
+    model: CompanyUser,
+    as: 'companyUsers',
+    where: { is_deleted: 0 },
+    required: false,
+  },
+];
 
 const convertToWebp = async (file) => {
   const originalPath = file.path;
@@ -50,12 +65,7 @@ const deleteCompanyLogoFiles = (logoFilename) => {
 const listCompanies = async () => {
   return Company.findAll({
     where: { is_deleted: 0 },
-    include: [{
-      model: CompanyUser,
-      as: 'companyUsers',
-      where: { is_deleted: 0 },
-      required: false,
-    }],
+    include: companyIncludes,
     order: [['id', 'ASC']],
   });
 };
@@ -63,12 +73,7 @@ const listCompanies = async () => {
 const getCompanyById = async (id) => {
   return Company.findOne({
     where: { id, is_deleted: 0 },
-    include: [{
-      model: CompanyUser,
-      as: 'companyUsers',
-      where: { is_deleted: 0 },
-      required: false,
-    }],
+    include: companyIncludes,
   });
 };
 

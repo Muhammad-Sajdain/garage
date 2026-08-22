@@ -14,5 +14,13 @@ module.exports = (sequelize, DataTypes) => {
     tableName: 'twilio_whatsapp_settings',
     timestamps: true
   });
+
+  TwilioWhatsappSetting.associate = models => {
+    TwilioWhatsappSetting.belongsTo(models.Company, {
+      foreignKey: 'company_id',
+      as: 'company',
+    });
+  };
+
   return TwilioWhatsappSetting;
 };

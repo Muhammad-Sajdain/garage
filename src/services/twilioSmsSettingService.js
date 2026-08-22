@@ -1,6 +1,6 @@
 // src/services/twilioSmsSettingService.js
 const db = require('../../models');
-const { TwilioSmsSetting } = db;
+const { TwilioSmsSetting, Company } = db;
 
 class TwilioSmsSettingService {
   // Create a new setting
@@ -19,7 +19,10 @@ class TwilioSmsSettingService {
     const where = { is_deleted: 0 };
     if (query.company_id) where.company_id = query.company_id;
     if (query.status) where.status = query.status;
-    return await TwilioSmsSetting.findAll({ where });
+    return await TwilioSmsSetting.findAll({
+      where,
+      include: [{ model: Company, as: 'company', attributes: ['id', 'name'] }],
+    });
   }
 
   // Update a setting
