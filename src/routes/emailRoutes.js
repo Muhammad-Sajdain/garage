@@ -31,6 +31,8 @@ const optionalUpload = (req, res, next) => {
 };
 
 // POST /email and POST /send-email
+router.post('/invoice', express.json(), emailController.sendInvoiceEmail);
+router.post('/quotation', express.json(), emailController.sendQuotationEmail);
 router.post('/', optionalUpload, emailController.sendEmail);
 
 module.exports = router;

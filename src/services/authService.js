@@ -6,6 +6,7 @@ const Admin = db.Admin;
 const Users = db.Users;
 const CompanyUser = db.CompanyUser;
 const Role = db.Role;
+const Customer = db.Customer;
 
 const JWT_SECRET = process.env.JWT_SECRET || 'garage-secret-key';
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
@@ -121,8 +122,59 @@ const loginUser = async (payload) => {
   };
 };
 
+const loginCustomer = async (payload) => {
+  const { email, password } = payload;
+
+  if (!email || !password) {
+    throw new Error('Email and password are required');
+  }
+
+  const customer = await Customer.findOne({
+    where: { email, is_deleted: 0 },
+  });
+
+  if (!customer) {
+    throw new Error('Invalid email or password');
+  }
+
+  let isPasswordValid = await bcrypt.compare(password, customer.password);
+  if (!isPasswordValid && password === customer.password) {
+    isPasswordValid = true;
+  }
+
+  if (!isPasswordValid) {
+    throw new Error('Invalid email or password');
+  }
+
+  const role = 'Customer';
+  const token = createToken({
+    sub: customer.id,
+    id: customer.id,
+    email: customer.email,
+    role,
+    company_id: customer.company_id,
+  });
+
+  return {
+    success: true,
+    token,
+    role,
+    company_id: customer.company_id,
+    user: {
+      id: customer.id,
+      name: customer.name,
+      email: customer.email,
+      phone: customer.phone,
+      address: customer.address,
+      role,
+      company_id: customer.company_id,
+    },
+  };
+};
+
 module.exports = {
   hashPassword,
   loginAdmin,
   loginUser,
+  loginCustomer,
 };

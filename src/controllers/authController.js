@@ -18,7 +18,17 @@ const loginUser = async (req, res) => {
   }
 };
 
+const loginCustomer = async (req, res) => {
+  try {
+    const result = await authService.loginCustomer(req.body);
+    res.json(result);
+  } catch (error) {
+    res.status(401).json({ success: false, message: error.message });
+  }
+};
+
 module.exports = {
   loginAdmin,
   loginUser,
+  loginCustomer,
 };

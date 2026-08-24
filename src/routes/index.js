@@ -38,6 +38,7 @@ router.use('/roles', roleRoutes);
 router.use('/companies', companyRoutes);
 router.use('/company-users', companyUserRoutes);
 router.use('/appointments', require('./appointmentRoutes'));
+router.use('/customer-reviews', customerReviewRoutes);
 router.use('/task-cards', taskCardRoutes);
 router.use('/tasks', taskRoutes);
 router.use('/task-assignments', taskAssignmentRoutes);
