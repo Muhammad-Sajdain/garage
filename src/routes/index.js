@@ -26,6 +26,10 @@ const sendgridSettingRoutes = require('./sendgridSettingRoutes');
 const smsRoutes = require('./smsRoutes');
 const whatsAppRoutes = require('./whatsappRoutes');
 const emailRoutes = require('./emailRoutes');
+const companyAccountRoutes = require('./companyAccountRoutes');
+const companyExpenseRoutes = require('./companyExpenseRoutes');
+const communicationLogRoutes = require('./communicationLogRoutes');
+const notificationRoutes = require('./notificationRoutes');
 
 const router = express.Router();
 
@@ -36,6 +40,10 @@ router.use('/admins', adminRoutes);
 router.use('/users', usersRoutes);
 router.use('/roles', roleRoutes);
 router.use('/companies', companyRoutes);
+router.use('/company-accounts', companyAccountRoutes);
+router.use('/company-expenses', companyExpenseRoutes);
+router.use('/communication-logs', communicationLogRoutes);
+router.use('/notifications', notificationRoutes);
 router.use('/company-users', companyUserRoutes);
 router.use('/appointments', require('./appointmentRoutes'));
 router.use('/customer-reviews', customerReviewRoutes);

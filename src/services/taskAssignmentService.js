@@ -28,12 +28,13 @@ const assignmentIncludes = [
 ];
 
 const listTaskAssignments = async (filters = {}) => {
-  const { task_id, user_id, status } = filters;
+  const { task_id, user_id, status, company_id } = filters;
   const where = { is_deleted: 0 };
 
   if (task_id !== undefined) where.task_id = task_id;
   if (user_id !== undefined) where.user_id = user_id;
   if (status !== undefined) where.status = status;
+  if (company_id !== undefined) where['$task.taskCard.company_id$'] = company_id;
 
   return TaskAssignment.findAll({ where, include: assignmentIncludes, order: [['id', 'ASC']] });
 };

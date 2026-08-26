@@ -50,7 +50,7 @@ const sendInvoiceEmail = async (req, res) => {
     });
     return res.status(200).json({
       success: true,
-      message: 'Invoice email accepted by SendGrid',
+      message: 'The Invoice has been sent to the customer.',
       data: result,
     });
   } catch (err) {
@@ -69,7 +69,7 @@ const sendQuotationEmail = async (req, res) => {
     });
     return res.status(200).json({
       success: true,
-      message: 'Quotation email accepted by SendGrid',
+      message: 'The Quotation has been sent to the customer.',
       data: result,
     });
   } catch (err) {

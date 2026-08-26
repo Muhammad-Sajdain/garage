@@ -172,9 +172,74 @@ const loginCustomer = async (payload) => {
   };
 };
 
+const changePassword = async (token, newPassword) => {
+  if (typeof newPassword !== 'string' || newPassword.length < 8) {
+    throw new Error('New password must be at least 8 characters');
+  }
+
+  let claims;
+  try {
+    claims = jwt.verify(token, JWT_SECRET);
+  } catch {
+    throw new Error('Your session is invalid or has expired');
+  }
+
+  const userId = claims.sub || claims.id;
+  let model = Users;
+  if (claims.role === 'SuperAdmin') model = Admin;
+  if (claims.role === 'Customer') model = Customer;
+
+  const account = await model.findOne({ where: { id: userId, is_deleted: 0 } });
+  if (!account) {
+    throw new Error('Account not found');
+  }
+
+  await account.update({ password: await hashPassword(newPassword) });
+  return { success: true, message: 'Password updated successfully' };
+};
+
+const updateProfile = async (token, payload) => {
+  let claims;
+  try {
+    claims = jwt.verify(token, JWT_SECRET);
+  } catch {
+    throw new Error('Your session is invalid or has expired');
+  }
+
+  const userId = claims.sub || claims.id;
+  let model = Users;
+  let allowedFields = ['name', 'email', 'phone', 'address', 'country'];
+  if (claims.role === 'SuperAdmin') {
+    model = Admin;
+    allowedFields = ['name', 'email', 'phone'];
+  }
+  if (claims.role === 'Customer') {
+    model = Customer;
+    allowedFields = ['name', 'email', 'phone', 'address'];
+  }
+
+  const account = await model.findOne({ where: { id: userId, is_deleted: 0 } });
+  if (!account) {
+    throw new Error('Account not found');
+  }
+
+  const updateData = Object.fromEntries(
+    allowedFields
+      .filter((field) => payload[field] !== undefined)
+      .map((field) => [field, payload[field]])
+  );
+  await account.update(updateData);
+
+  const profile = account.toJSON();
+  delete profile.password;
+  return { success: true, data: profile };
+};
+
 module.exports = {
   hashPassword,
   loginAdmin,
   loginUser,
   loginCustomer,
+  changePassword,
+  updateProfile,
 };
