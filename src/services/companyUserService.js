@@ -4,6 +4,20 @@ const db = require('../../models');
 const CompanyUser = db.CompanyUser;
 const DEFAULT_COMPANY_USER_PASSWORD = 'garage@123';
 
+const resetCompanyUserPassword = async (id) => {
+  const companyUser = await CompanyUser.findOne({ where: { id, is_deleted: 0 } });
+  if (!companyUser) throw new Error('CompanyUser not found');
+
+  const hashedPassword = await bcrypt.hash(DEFAULT_COMPANY_USER_PASSWORD, 10);
+  const [updatedUsers] = await db.Users.update(
+    { password: hashedPassword },
+    { where: { id: companyUser.user_id, is_deleted: 0 } },
+  );
+  if (!updatedUsers) throw new Error('Associated user not found');
+
+  return { success: true, message: 'Password reset successfully' };
+};
+
 const listCompanyUsers = async (company_id) => {
   return CompanyUser.findAll({
     where: { company_id, is_deleted: 0 },
@@ -212,4 +226,5 @@ module.exports = {
   createCompanyUser,
   updateCompanyUser,
   deleteCompanyUser,
+  resetCompanyUserPassword,
 };

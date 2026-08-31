@@ -77,10 +77,25 @@ const deleteCustomer = async (id) => {
   return { success: true, message: 'Customer deleted successfully' };
 };
 
+const resetCustomerPassword = async (id) => {
+  const customer = await Customer.findOne({
+    where: { id, is_deleted: 0 },
+  });
+
+  if (!customer) {
+    throw new Error('Customer not found');
+  }
+
+  const hashedPassword = await bcrypt.hash(DEFAULT_CUSTOMER_PASSWORD, 10);
+  await customer.update({ password: hashedPassword });
+  return { success: true, message: 'Password reset successfully' };
+};
+
 module.exports = {
   listCustomers,
   getCustomerById,
   createCustomer,
   updateCustomer,
   deleteCustomer,
+  resetCustomerPassword,
 };

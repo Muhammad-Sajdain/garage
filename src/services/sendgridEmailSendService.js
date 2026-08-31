@@ -5,10 +5,26 @@ const sgMail = require('@sendgrid/mail');
 const db = require('../../models');
 const invoiceService = require('./invoiceService');
 const quotationService = require('./quotationService');
+const communicationLogService = require('./communicationLogService');
 const { generateInvoicePdfBuffer, generateQuotationPdfBuffer } = require('./invoicePdfService');
 const { SendgridSetting, Customer, Company } = db;
 
+const createHttpError = (message, status) => Object.assign(new Error(message), { status });
+
 class SendgridEmailSendService {
+  async createEmailCommunicationLog({ companyId, userId }) {
+    if (!userId) {
+      throw createHttpError('Unable to create email communication log: document creator is missing', 500);
+    }
+
+    await communicationLogService.createCommunicationLog({
+      company_id: companyId,
+      user_id: userId,
+      channel: 'Email',
+      status: 1,
+    });
+  }
+
   /**
    * Helper to format attachments into SendGrid expected structure.
    */
@@ -236,7 +252,7 @@ class SendgridEmailSendService {
     }
 
     try {
-      return await this.sendEmail({
+      const result = await this.sendEmail({
         companyId: invoice.company_id,
         customerId: customer.id,
         message: 'Your invoice is ready. Please review the attached document.',
@@ -248,6 +264,13 @@ class SendgridEmailSendService {
           type: 'application/pdf',
         },
       });
+
+      await this.createEmailCommunicationLog({
+        companyId: invoice.company_id,
+        userId: invoice.created_by,
+      });
+
+      return result;
     } catch (error) {
       if (error.status) throw error;
       throw createHttpError('Unable to send invoice email', 502);
@@ -296,7 +319,7 @@ class SendgridEmailSendService {
     }
 
     try {
-      return await this.sendEmail({
+      const result = await this.sendEmail({
         companyId: quotation.company_id, customerId: customer.id,
         message: 'Your quotation is ready. Please review the attached document.',
         subject: 'Quotation Ready', fromEmail: setting.email,
@@ -306,6 +329,13 @@ class SendgridEmailSendService {
           type: 'application/pdf',
         },
       });
+
+      await this.createEmailCommunicationLog({
+        companyId: quotation.company_id,
+        userId: quotation.created_by,
+      });
+
+      return result;
     } catch (error) {
       if (error.status) throw error;
       throw createHttpError('Unable to send quotation email', 502);

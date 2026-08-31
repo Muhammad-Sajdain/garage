@@ -54,10 +54,23 @@ const deleteCustomer = async (req, res) => {
   }
 };
 
+const resetCustomerPassword = async (req, res) => {
+  try {
+    const result = await customerService.resetCustomerPassword(req.params.id);
+    res.json(result);
+  } catch (error) {
+    if (error.message === 'Customer not found') {
+      return res.status(404).json({ success: false, message: error.message });
+    }
+    return res.status(400).json({ success: false, message: error.message });
+  }
+};
+
 module.exports = {
   getCustomers,
   getCustomer,
   createCustomer,
   updateCustomer,
   deleteCustomer,
+  resetCustomerPassword,
 };
