@@ -59,10 +59,23 @@ const deleteCompanyUser = async (req, res) => {
   }
 };
 
+const resetCompanyUserPassword = async (req, res) => {
+  try {
+    const result = await companyUserService.resetCompanyUserPassword(req.params.id);
+    return res.json(result);
+  } catch (error) {
+    if (error.message === 'CompanyUser not found') {
+      return res.status(404).json({ success: false, message: error.message });
+    }
+    return res.status(400).json({ success: false, message: error.message });
+  }
+};
+
 module.exports = {
   getCompanyUsers,
   getCompanyUser,
   createCompanyUser,
   updateCompanyUser,
   deleteCompanyUser,
+  resetCompanyUserPassword,
 };

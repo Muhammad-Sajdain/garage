@@ -9,6 +9,7 @@ module.exports = (sequelize, DataTypes) => {
     payment_status: { type: DataTypes.ENUM('pending','completed'), allowNull: false, defaultValue: 'pending' },
     subtotal: { type: DataTypes.DECIMAL(10,2), allowNull: false },
     discount: { type: DataTypes.DECIMAL(10,2), allowNull: true },
+    discount_percentage: { type: DataTypes.DECIMAL(5,2), allowNull: true },
     tax_amount: { type: DataTypes.DECIMAL(10,2), allowNull: true },
     tax_percentage: { type: DataTypes.DECIMAL(5,2), allowNull: true },
     total: { type: DataTypes.DECIMAL(10,2), allowNull: false },

@@ -40,6 +40,46 @@ const sendEmail = async (req, res) => {
   }
 };
 
+// POST /email/invoice
+// Body: { invoice_id: number }
+const sendInvoiceEmail = async (req, res) => {
+  try {
+    const invoiceId = req.body.invoice_id || req.body.invoiceId;
+    const result = await sendgridEmailSendService.sendInvoiceEmail({
+      invoiceId: invoiceId ? parseInt(invoiceId, 10) : undefined,
+    });
+    return res.status(200).json({
+      success: true,
+      message: 'The Invoice has been sent to the customer.',
+      data: result,
+    });
+  } catch (err) {
+    console.error('Invoice email sending error:', err.message);
+    return res.status(err.status || 400).json({ success: false, error: err.message });
+  }
+};
+
+// POST /email/quotation
+// Body: { quotation_id: number }
+const sendQuotationEmail = async (req, res) => {
+  try {
+    const quotationId = req.body.quotation_id || req.body.quotationId;
+    const result = await sendgridEmailSendService.sendQuotationEmail({
+      quotationId: quotationId ? parseInt(quotationId, 10) : undefined,
+    });
+    return res.status(200).json({
+      success: true,
+      message: 'The Quotation has been sent to the customer.',
+      data: result,
+    });
+  } catch (err) {
+    console.error('Quotation email sending error:', err.message);
+    return res.status(err.status || 400).json({ success: false, error: err.message });
+  }
+};
+
 module.exports = {
   sendEmail,
+  sendInvoiceEmail,
+  sendQuotationEmail,
 };

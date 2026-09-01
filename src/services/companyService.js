@@ -5,6 +5,22 @@ const db = require('../../models');
 
 const Company = db.Company;
 const CompanyUser = db.CompanyUser;
+const Users = db.Users;
+const CompanyAccount = db.CompanyAccount;
+
+const companyIncludes = [
+  {
+    model: Users,
+    as: 'owner',
+    attributes: ['id', 'name'],
+  },
+  {
+    model: CompanyUser,
+    as: 'companyUsers',
+    where: { is_deleted: 0 },
+    required: false,
+  },
+];
 
 const convertToWebp = async (file) => {
   const originalPath = file.path;
@@ -50,12 +66,7 @@ const deleteCompanyLogoFiles = (logoFilename) => {
 const listCompanies = async () => {
   return Company.findAll({
     where: { is_deleted: 0 },
-    include: [{
-      model: CompanyUser,
-      as: 'companyUsers',
-      where: { is_deleted: 0 },
-      required: false,
-    }],
+    include: companyIncludes,
     order: [['id', 'ASC']],
   });
 };
@@ -63,12 +74,7 @@ const listCompanies = async () => {
 const getCompanyById = async (id) => {
   return Company.findOne({
     where: { id, is_deleted: 0 },
-    include: [{
-      model: CompanyUser,
-      as: 'companyUsers',
-      where: { is_deleted: 0 },
-      required: false,
-    }],
+    include: companyIncludes,
   });
 };
 
@@ -112,6 +118,13 @@ const createCompany = async (payload, file) => {
       user_id: owner_id,
       company_id: company.id,
       role_id: 1,
+      status: 1,
+      is_deleted: 0,
+    }, { transaction });
+
+    await CompanyAccount.create({
+      company_id: company.id,
+      current_amount: 0,
       status: 1,
       is_deleted: 0,
     }, { transaction });
