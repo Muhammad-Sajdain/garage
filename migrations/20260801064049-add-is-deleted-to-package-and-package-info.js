@@ -3,21 +3,26 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.addColumn('packages', 'is_deleted', {
-      type: Sequelize.TINYINT,
-      allowNull: false,
-      defaultValue: 0,
-    });
+    for (const tableName of ['packages', 'package_infos']) {
+      const table = await queryInterface.describeTable(tableName).catch(() => null);
 
-    await queryInterface.addColumn('package_infos', 'is_deleted', {
-      type: Sequelize.TINYINT,
-      allowNull: false,
-      defaultValue: 0,
-    });
+      if (table && !table.is_deleted) {
+        await queryInterface.addColumn(tableName, 'is_deleted', {
+          type: Sequelize.TINYINT,
+          allowNull: false,
+          defaultValue: 0,
+        });
+      }
+    }
   },
 
   async down(queryInterface, Sequelize) {
-    await queryInterface.removeColumn('packages', 'is_deleted');
-    await queryInterface.removeColumn('package_infos', 'is_deleted');
+    for (const tableName of ['packages', 'package_infos']) {
+      const table = await queryInterface.describeTable(tableName).catch(() => null);
+
+      if (table && table.is_deleted) {
+        await queryInterface.removeColumn(tableName, 'is_deleted');
+      }
+    }
   },
 };
