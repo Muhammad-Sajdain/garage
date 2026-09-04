@@ -21,6 +21,7 @@ const createUser = async (payload) => {
   const {
     name,
     country,
+    state,
     email,
     phone,
     address,
@@ -32,6 +33,7 @@ const createUser = async (payload) => {
   return Users.create({
     name,
     country,
+    state: state ?? '',
     email,
     password: hashedPassword,
     phone,
