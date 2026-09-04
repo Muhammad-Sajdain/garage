@@ -8,6 +8,9 @@ const getCompanyDashboardStats = async (req, res) => {
     if (!companyId) return res.status(400).json({ success: false, message: 'company_id is required' });
 
     const company_id = Number(companyId);
+    const startDate = req.query.startDate ? new Date(`${req.query.startDate}T00:00:00`) : null;
+    const endDate = req.query.endDate ? new Date(`${req.query.endDate}T23:59:59.999`) : null;
+    const createdBetween = startDate && endDate ? { createdAt: { [Op.between]: [startDate, endDate] } } : {};
 
     const [
       revenue,
@@ -22,28 +25,28 @@ const getCompanyDashboardStats = async (req, res) => {
       taskCardRows,
     ] = await Promise.all([
       // Total Revenue (sum from sales)
-      db.Sales.sum('amount', { where: { company_id, is_deleted: 0 } }),
+      db.Sales.sum('amount', { where: { company_id, is_deleted: 0, ...createdBetween } }),
       // Total Pending Invoices (invoice_status = 'pending')
-      db.Invoice.count({ where: { company_id, is_deleted: 0, invoice_status: 'pending' } }),
+      db.Invoice.count({ where: { company_id, is_deleted: 0, invoice_status: 'pending', ...createdBetween } }),
       // Total Pending Quotations (quotation_status in draft,pending)
-      db.Quotation.count({ where: { company_id, is_deleted: 0, quotation_status: { [Op.in]: ['draft', 'pending'] } } }),
+      db.Quotation.count({ where: { company_id, is_deleted: 0, quotation_status: { [Op.in]: ['draft', 'pending'] }, ...createdBetween } }),
       // Total Pending Payments (invoice_payments with payment_status pending or not_verified)
-      db.InvoicePayment.count({ where: { company_id, is_deleted: 0, payment_status: { [Op.in]: ['pending', 'not_verified'] } } }),
+      db.InvoicePayment.count({ where: { company_id, is_deleted: 0, payment_status: { [Op.in]: ['pending', 'not_verified'] }, ...createdBetween } }),
       // Total Employees (company_users)
-      db.CompanyUser.count({ where: { company_id, status: 1, is_deleted: 0 } }),
+      db.CompanyUser.count({ where: { company_id, status: 1, is_deleted: 0, ...createdBetween } }),
       // Total Customers
-      db.Customer.count({ where: { company_id, is_deleted: 0 } }),
+      db.Customer.count({ where: { company_id, is_deleted: 0, ...createdBetween } }),
       // Total Vehicles — vehicles don't have company_id; join via Customer
       db.Vehicle.count({
         where: { is_deleted: 0 },
         include: [{ model: db.Customer, as: 'customer', where: { company_id, is_deleted: 0 } }],
       }),
       // Total Appointments
-      db.Appointment.count({ where: { company_id, is_deleted: 0 } }),
+      db.Appointment.count({ where: { company_id, is_deleted: 0, ...createdBetween } }),
       // Total Task Cards
-      db.TaskCard.count({ where: { company_id, is_deleted: 0 } }),
+      db.TaskCard.count({ where: { company_id, is_deleted: 0, ...createdBetween } }),
       // fetch task card ids to count tasks by status
-      db.TaskCard.findAll({ where: { company_id, is_deleted: 0 }, attributes: ['id'] }),
+      db.TaskCard.findAll({ where: { company_id, is_deleted: 0, ...createdBetween }, attributes: ['id'] }),
     ]);
 
     const taskCardIds = (taskCardRows || []).map((r) => r.id);
@@ -112,17 +115,18 @@ const getCompanyRevenueOverview = async (req, res) => {
       months.push({ date: d, key })
     }
 
-    const startDate = months[0].date
+    const selectedStartDate = req.query.startDate ? new Date(`${req.query.startDate}T00:00:00`) : months[0].date
+    const selectedEndDate = req.query.endDate ? new Date(`${req.query.endDate}T23:59:59.999`) : new Date()
 
     // raw queries to aggregate by YYYY-MM (works reliably across dialects)
     const salesQuery = `SELECT DATE_FORMAT(createdAt, '%Y-%m') AS month, SUM(amount) AS total FROM sales WHERE company_id = ? AND is_deleted = 0 AND createdAt >= ? GROUP BY month ORDER BY month ASC`
     // company_expenses model does not define `is_deleted`, so omit that filter
     const expensesQuery = `SELECT DATE_FORMAT(createdAt, '%Y-%m') AS month, SUM(amount) AS total FROM company_expenses WHERE company_id = ? AND transaction_type = 'Debit' AND createdAt >= ? GROUP BY month ORDER BY month ASC`
 
-    const replacements = [company_id, startDate]
+    const replacements = [company_id, selectedStartDate, selectedEndDate]
 
-    const salesRows = await db.sequelize.query(salesQuery, { replacements, type: db.Sequelize.QueryTypes.SELECT })
-    const expenseRows = await db.sequelize.query(expensesQuery, { replacements, type: db.Sequelize.QueryTypes.SELECT })
+    const salesRows = await db.sequelize.query(salesQuery.replace('createdAt >= ?', 'createdAt >= ? AND createdAt <= ?'), { replacements, type: db.Sequelize.QueryTypes.SELECT })
+    const expenseRows = await db.sequelize.query(expensesQuery.replace('createdAt >= ?', 'createdAt >= ? AND createdAt <= ?'), { replacements, type: db.Sequelize.QueryTypes.SELECT })
 
     const revenueMap = new Map(salesRows.map((r) => [r.month, Number(r.total || 0)]))
     const expenseMap = new Map(expenseRows.map((r) => [r.month, Number(r.total || 0)]))
@@ -143,12 +147,15 @@ const getCompanyTasksDoughnut = async (req, res) => {
     const companyId = req.query.company_id || req.body.company_id;
     if (!companyId) return res.status(400).json({ success: false, message: 'company_id is required' });
     const company_id = Number(companyId);
+    const startDate = req.query.startDate ? new Date(`${req.query.startDate}T00:00:00`) : null;
+    const endDate = req.query.endDate ? new Date(`${req.query.endDate}T23:59:59.999`) : null;
+    const createdBetween = startDate && endDate ? { createdAt: { [Op.between]: [startDate, endDate] } } : {};
 
     // Total Task Cards for the company
-    const totalTaskCards = await db.TaskCard.count({ where: { company_id, is_deleted: 0 } });
+    const totalTaskCards = await db.TaskCard.count({ where: { company_id, is_deleted: 0, ...createdBetween } });
 
     // Get task card ids for the company
-    const taskCardRows = await db.TaskCard.findAll({ where: { company_id, is_deleted: 0 }, attributes: ['id'] });
+    const taskCardRows = await db.TaskCard.findAll({ where: { company_id, is_deleted: 0, ...createdBetween }, attributes: ['id'] });
     const taskCardIds = (taskCardRows || []).map((r) => r.id);
 
     let totalTasks = 0;
