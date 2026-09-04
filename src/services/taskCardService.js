@@ -20,7 +20,14 @@ const quotationInclude = {
 
 // List task cards (optional filters) with associated tasks
 const listTaskCards = async (filters = {}) => {
-  const where = { is_deleted: 0, ...filters };
+  const where = { is_deleted: 0 };
+
+  if (filters.company_id) where.company_id = Number(filters.company_id);
+  if (filters.quotation_id) where.quotation_id = Number(filters.quotation_id);
+  // accept `user` query param as shorthand for created_by
+  if (filters.user) where.created_by = Number(filters.user);
+  if (filters.status !== undefined) where.status = filters.status;
+
   return TaskCard.findAll({
     where,
     include: [

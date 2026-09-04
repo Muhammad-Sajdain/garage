@@ -86,6 +86,7 @@ const createCompany = async (payload, file) => {
     country,
     phone,
     address,
+    state,
     registration_no,
     status = 1,
   } = payload;
@@ -107,6 +108,7 @@ const createCompany = async (payload, file) => {
       logo: logoFilename,
       email,
       country,
+      state: state ?? '',
       phone,
       address,
       registration_no,

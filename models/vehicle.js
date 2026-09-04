@@ -24,7 +24,7 @@ module.exports = (sequelize, DataTypes) => {
       },
       name: {
         type: DataTypes.TEXT,
-        allowNull: false,
+        allowNull: true,
       },
       make: {
         type: DataTypes.TEXT,
@@ -49,7 +49,7 @@ module.exports = (sequelize, DataTypes) => {
       },
       license_plate: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
         unique: true,
       },
       insured: {

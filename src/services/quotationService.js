@@ -14,7 +14,15 @@ const quotationIncludes = [
 
 // List quotations with optional filters, include details & documents
 const listQuotations = async (filters = {}) => {
-  const where = { is_deleted: 0, ...filters };
+  // Build a safe `where` object and map common query params
+  const where = { is_deleted: 0 };
+
+  if (filters.company_id) where.company_id = Number(filters.company_id);
+  if (filters.vehicle_id) where.vehicle_id = Number(filters.vehicle_id);
+  // accept `user` query param as shorthand for created_by
+  if (filters.user) where.created_by = Number(filters.user);
+  if (filters.quotation_status) where.quotation_status = filters.quotation_status;
+
   return Quotation.findAll({
     where,
     include: quotationIncludes,

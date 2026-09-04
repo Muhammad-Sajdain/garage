@@ -77,6 +77,7 @@ const createCompanyUser = async (payload) => {
     const {
       name,
       country,
+      state,
       email,
       phone,
       address,
@@ -101,6 +102,7 @@ const createCompanyUser = async (payload) => {
         {
           name,
           country,
+          state: state ?? '',
           email,
           password: hashedPassword,
           phone,
@@ -150,6 +152,7 @@ const updateCompanyUser = async (id, payload) => {
     const {
       name,
       country,
+      state,
       email,
       phone,
       address,
@@ -172,6 +175,7 @@ const updateCompanyUser = async (id, payload) => {
     const userUpdateData = {};
     if (name !== undefined) userUpdateData.name = name;
     if (country !== undefined) userUpdateData.country = country;
+    if (state !== undefined) userUpdateData.state = state;
     if (email !== undefined) userUpdateData.email = email;
     if (phone !== undefined) userUpdateData.phone = phone;
     if (address !== undefined) userUpdateData.address = address;
