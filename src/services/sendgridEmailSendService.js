@@ -209,7 +209,7 @@ class SendgridEmailSendService {
       .join(', ') || '—';
     let pdfBuffer;
     try {
-      pdfBuffer = await generateInvoicePdfBuffer({
+        pdfBuffer = await generateInvoicePdfBuffer({
         companyName: company.name ?? 'Company',
         companyEmail: company.email ?? '—',
         companyCountry: company.country ?? '—',
@@ -225,11 +225,9 @@ class SendgridEmailSendService {
         customerEmail: customer.email,
         customerPhone: customer.phone ?? '—',
         customerAddress: customer.address ?? '—',
-        vehicleName: vehicle.name ?? ([vehicle.make, vehicle.model].filter(Boolean).join(' ') || '—'),
-        vehicleMake: vehicle.make ?? '—',
-        vehicleModel: vehicle.model ?? '—',
-        vehicleVariant: vehicle.variant ?? '—',
-        vehicleYear: vehicle.year ? String(vehicle.year) : '—',
+          vehicleMake: vehicle.make ?? '—',
+          vehicleModel: vehicle.model ?? '—',
+          vehicleYear: vehicle.year ? String(vehicle.year) : '—',
         vin: vehicle.vin ?? vehicle.VIN ?? '—',
         licensePlate: vehicle.license_plate ?? vehicle.licensePlate ?? '—',
         notes: invoice.notes ?? '',
@@ -306,8 +304,9 @@ class SendgridEmailSendService {
         companyRegNo: company.registration_no ?? company.registrationNo ?? '—', companyLogoUrl: company.logo_url ?? company.logoUrl ?? company.logo,
         quotationNumber: quotation.quotation_number ?? `QT-${quotation.id}`, creationDate: quotation.creation_date ?? '',
         customerName: customer.name ?? '—', customerEmail: customer.email, customerPhone: customer.phone ?? '—', customerAddress: customer.address ?? '—',
-        vehicleName: vehicle.name ?? ([vehicle.make, vehicle.model].filter(Boolean).join(' ') || '—'), vehicleMake: vehicle.make ?? '—',
-        vehicleModel: vehicle.model ?? '—', vehicleVariant: vehicle.variant ?? '—', vehicleYear: vehicle.year ? String(vehicle.year) : '—',
+        vehicleMake: vehicle.make ?? '—',
+        vehicleModel: vehicle.model ?? '—',
+        vehicleYear: vehicle.year ? String(vehicle.year) : '—',
         vin: vehicle.vin ?? vehicle.VIN ?? '—', licensePlate: vehicle.license_plate ?? vehicle.licensePlate ?? '—', note: quotation.note ?? '',
         includeLineItems: (quotation.details ?? []).length > 0,
         lineItems: (quotation.details ?? []).map((detail) => ({ type: detail.type, description: detail.description ?? '', qty: Number(detail.qty ?? 0), unitPrice: Number(detail.unit_price ?? 0) })),

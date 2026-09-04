@@ -44,8 +44,18 @@ const createVehicle = async (payload) => {
     insured = 0,
     created_by,
     status = 1,
-    insuranceDetails,
   } = payload;
+
+  // merge top-level insurance fields with nested `insuranceDetails` (nested overrides top-level)
+  const insuranceDetails = {
+    insurance_number: payload.insurance_number ?? payload.insuranceNumber,
+    policy_number: payload.policy_number ?? payload.policyNumber,
+    expiry_date: payload.expiry_date ?? payload.expiryDate,
+    claim_number: payload.claim_number ?? payload.claimNumber,
+    insurance_company: payload.insurance_company ?? payload.insuranceCompany,
+    insurance_company_phone: payload.insurance_company_phone ?? payload.insuranceCompanyPhone,
+    ...(payload.insuranceDetails || {}),
+  };
 
   const createdVehicle = await Vehicle.create({
     customer_id,
@@ -62,10 +72,15 @@ const createVehicle = async (payload) => {
     is_deleted: 0,
   });
 
-  if (insured === 1 && insuranceDetails) {
+  if (insured === 1 && insuranceDetails && (insuranceDetails.claim_number || insuranceDetails.claimNumber)) {
     await InsuredVehicle.create({
       vehicle_id: createdVehicle.id,
-      ...insuranceDetails,
+      insurance_number: insuranceDetails.insurance_number,
+      policy_number: insuranceDetails.policy_number,
+      expiry_date: insuranceDetails.expiry_date,
+      claim_number: insuranceDetails.claim_number || insuranceDetails.claimNumber,
+      insurance_company: insuranceDetails.insurance_company,
+      insurance_company_phone: insuranceDetails.insurance_company_phone,
       status: 1,
       is_deleted: 0,
     });
@@ -83,20 +98,36 @@ const updateVehicle = async (id, payload) => {
     throw new Error('Vehicle not found');
   }
 
-  const { insuranceDetails, ...vehicleData } = payload;
+  const { insuranceDetails, insurance_number, policy_number, expiry_date, claim_number, insurance_company, insurance_company_phone, ...vehicleData } = payload;
   await vehicle.update(vehicleData);
 
-  if (vehicleData.insured === 1 && insuranceDetails) {
+  // Merge top-level insurance fields with nested insuranceDetails (nested overrides)
+  const resolvedInsurance = {
+    insurance_number,
+    policy_number,
+    expiry_date,
+    claim_number,
+    insurance_company,
+    insurance_company_phone,
+    ...(insuranceDetails || {}),
+  };
+
+  if (vehicleData.insured === 1) {
     const existingInsurance = await InsuredVehicle.findOne({
       where: { vehicle_id: id, is_deleted: 0 },
     });
 
     if (existingInsurance) {
-      await existingInsurance.update(insuranceDetails);
+      await existingInsurance.update(resolvedInsurance);
     } else {
       await InsuredVehicle.create({
         vehicle_id: id,
-        ...insuranceDetails,
+        insurance_number: resolvedInsurance.insurance_number,
+        policy_number: resolvedInsurance.policy_number,
+        expiry_date: resolvedInsurance.expiry_date,
+        claim_number: resolvedInsurance.claim_number,
+        insurance_company: resolvedInsurance.insurance_company,
+        insurance_company_phone: resolvedInsurance.insurance_company_phone,
         status: 1,
         is_deleted: 0,
       });

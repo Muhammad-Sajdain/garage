@@ -20,27 +20,27 @@ module.exports = (sequelize, DataTypes) => {
       },
       insurance_number: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
       },
       policy_number: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
       },
       expiry_date: {
         type: DataTypes.DATE,
-        allowNull: false,
+        allowNull: true,
       },
       claim_number: {
         type: DataTypes.STRING,
-        allowNull: true,
+        allowNull: false,
       },
       insurance_company: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
       },
       insurance_company_phone: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
       },
       status: {
         type: DataTypes.TINYINT,

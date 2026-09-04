@@ -78,8 +78,8 @@ async function generateDocumentPdfBuffer(payload, { title, numberLabel, noteKey,
     lines.forEach((line, index) => doc.text(doc.splitTextToSize(safePdfText(line), colWidth), x, y + 18 + index * 15));
   };
   drawSection(leftColX, 'Customer Detail', [`Name: ${safePdfText(payload.customerName)}`, `Email: ${safePdfText(payload.customerEmail)}`, `Phone: ${safePdfText(payload.customerPhone)}`, `Address: ${safePdfText(payload.customerAddress)}`]);
-  drawSection(rightColX, 'Vehicle Detail', [`Name: ${safePdfText(payload.vehicleName)}`, `Make: ${safePdfText(payload.vehicleMake)}`, `Model: ${safePdfText(payload.vehicleModel)}`, `Variant: ${safePdfText(payload.vehicleVariant)}`, `Year: ${safePdfText(payload.vehicleYear)}`, `VIN: ${safePdfText(payload.vin)}`, `License Plate: ${safePdfText(payload.licensePlate)}`]);
-  y += 18 + 7 * 15 + 10; doc.setLineWidth(0.8); doc.line(margin, y, pageWidth - margin, y); y += 18;
+  drawSection(rightColX, 'Vehicle Detail', [`Make: ${safePdfText(payload.vehicleMake)}`, `Model: ${safePdfText(payload.vehicleModel)}`, `Year: ${safePdfText(payload.vehicleYear)}`, `VIN: ${safePdfText(payload.vin)}`, `License Plate: ${safePdfText(payload.licensePlate)}`]);
+  y += 18 + 5 * 15 + 10; doc.setLineWidth(0.8); doc.line(margin, y, pageWidth - margin, y); y += 18;
 
   const isEnabled = payload.includeLineItems !== false;
   const pdfItems = payload.lineItems.length ? payload.lineItems : [{ type: 'service', description: '—', qty: 0, unitPrice: 0 }];
