@@ -105,7 +105,7 @@ async function generateDocumentPdfBuffer(payload, { title, numberLabel, noteKey,
 
 const generateInvoicePdfBuffer = (payload) => generateDocumentPdfBuffer(
   { ...payload, documentNumber: payload.invoiceNumber },
-  { title: 'INVOICE', numberLabel: 'Invoice', noteKey: 'notes', invoiceMeta: true },
+  { title: payload.documentTitle ?? 'INVOICE', numberLabel: 'Invoice', noteKey: 'notes', invoiceMeta: true },
 );
 
 const generateQuotationPdfBuffer = (payload) => generateDocumentPdfBuffer(

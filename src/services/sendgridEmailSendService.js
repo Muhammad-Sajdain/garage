@@ -4,6 +4,7 @@ const fs = require('fs');
 const sgMail = require('@sendgrid/mail');
 const db = require('../../models');
 const invoiceService = require('./invoiceService');
+const towingInvoiceService = require('./towingInvoiceService');
 const quotationService = require('./quotationService');
 const communicationLogService = require('./communicationLogService');
 const { generateInvoicePdfBuffer, generateQuotationPdfBuffer } = require('./invoicePdfService');
@@ -275,6 +276,44 @@ class SendgridEmailSendService {
     }
   }
 
+
+  async sendTowingInvoiceEmail({ towingInvoiceId }) {
+    if (!towingInvoiceId) throw createHttpError('towing_invoice_id is required', 400);
+
+    const invoice = await towingInvoiceService.getTowingInvoiceById(towingInvoiceId);
+    if (!invoice) throw createHttpError('Towing invoice not found', 404);
+    const vehicle = invoice.vehicle;
+    const customer = vehicle?.customer;
+    if (!vehicle || vehicle.is_deleted) throw createHttpError('Vehicle not found for this towing invoice', 404);
+    if (!customer || customer.is_deleted || !customer.email) throw createHttpError('Customer does not have an email address', 400);
+
+    const setting = await SendgridSetting.findOne({ where: { company_id: invoice.company_id, is_deleted: 0 } });
+    if (!setting?.sendgrid_api_key || !setting.email) throw createHttpError('SendGrid settings are missing for this company', 400);
+    const company = await Company.findOne({ where: { id: invoice.company_id, is_deleted: 0 } });
+    if (!company) throw createHttpError('Company not found for this towing invoice', 404);
+
+    let pdfBuffer;
+    try {
+      pdfBuffer = await generateInvoicePdfBuffer({
+        companyName: company.name ?? 'Company', companyEmail: company.email ?? 'â€”', companyCountry: company.country ?? 'â€”', companyPhone: company.phone ?? 'â€”',
+        companyAddress: [company.address, company.city, company.state, company.zip_code ?? company.zipCode].filter(Boolean).join(', ') || 'â€”',
+        companyRegNo: company.registration_no ?? company.registrationNo ?? 'â€”', companyLogoUrl: company.logo_url ?? company.logoUrl ?? company.logo,
+        invoiceNumber: invoice.invoice_number ?? `TOW-${invoice.id}`, creationDate: invoice.creation_date ?? '', dueDate: invoice.creation_date ?? '', paymentStatus: invoice.payment_status ?? 'pending',
+        customerName: customer.name ?? 'â€”', customerEmail: customer.email, customerPhone: customer.phone ?? 'â€”', customerAddress: customer.address ?? 'â€”',
+        vehicleMake: vehicle.make ?? 'â€”', vehicleModel: vehicle.model ?? 'â€”', vehicleYear: vehicle.year ? String(vehicle.year) : 'â€”', vin: vehicle.vin ?? vehicle.VIN ?? 'â€”', licensePlate: vehicle.license_plate ?? vehicle.licensePlate ?? 'â€”',
+        notes: `Pickup: ${invoice.pick_up_address ?? 'â€”'}\nDrop off: ${invoice.drop_off_address ?? 'â€”'}`, includeLineItems: true,
+        lineItems: [{ type: 'service', description: 'Towing service', qty: Number(invoice.miles ?? 0), unitPrice: Number(invoice.rate ?? 0) }],
+        subtotal: Number(invoice.subtotal ?? 0), taxPercentage: Number(invoice.tax_percentage ?? 0), taxAmount: Number(invoice.tax_amount ?? 0), discountPercentage: Number(invoice.discount_percentage ?? 0), discountAmount: Number(invoice.discount ?? 0), total: Number(invoice.total ?? 0), documentTitle: 'TOWING INVOICE',
+      });
+    } catch { throw createHttpError('Unable to generate towing invoice PDF', 500); }
+
+    const result = await this.sendEmail({
+      companyId: invoice.company_id, customerId: customer.id, message: 'Your towing invoice is ready. Please review the attached document.', subject: 'Towing Invoice Ready', fromEmail: setting.email,
+      attachment: { content: pdfBuffer.toString('base64'), filename: `Towing-Invoice-${invoice.invoice_number ?? invoice.id}.pdf`, type: 'application/pdf' },
+    });
+    await this.createEmailCommunicationLog({ companyId: invoice.company_id, userId: invoice.created_by });
+    return result;
+  }
 
   async sendQuotationEmail({ quotationId }) {
     if (!quotationId) throw createHttpError('quotation_id is required', 400);

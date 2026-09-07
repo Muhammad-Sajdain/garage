@@ -59,6 +59,18 @@ const sendInvoiceEmail = async (req, res) => {
   }
 };
 
+const sendTowingInvoiceEmail = async (req, res) => {
+  try {
+    const towingInvoiceId = req.body.towing_invoice_id || req.body.towingInvoiceId;
+    const result = await sendgridEmailSendService.sendTowingInvoiceEmail({
+      towingInvoiceId: towingInvoiceId ? parseInt(towingInvoiceId, 10) : undefined,
+    });
+    return res.status(200).json({ success: true, message: 'The towing invoice has been sent to the customer.', data: result });
+  } catch (err) {
+    return res.status(err.status || 400).json({ success: false, error: err.message });
+  }
+};
+
 // POST /email/quotation
 // Body: { quotation_id: number }
 const sendQuotationEmail = async (req, res) => {
@@ -81,5 +93,6 @@ const sendQuotationEmail = async (req, res) => {
 module.exports = {
   sendEmail,
   sendInvoiceEmail,
+  sendTowingInvoiceEmail,
   sendQuotationEmail,
 };
