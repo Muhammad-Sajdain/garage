@@ -5,6 +5,7 @@ const db = require('../../models');
 const {
   InvoicePayment,
   Invoice,
+  TowingInvoice,
   Sales,
   CompanyExpense,
   CompanyAccount,
@@ -19,7 +20,7 @@ const getPaymentById = async (id) => {
 };
 
 // List payments (supports simple filter object)
-const listPayments = async (filters = {}) => {
+const listPayments = async ({ page, limit, dateField, startDate, endDate, ...filters } = {}) => {
   const where = { is_deleted: 0, ...filters };
   return InvoicePayment.findAll({ where, include: [{ model: Invoice, as: 'invoice' }], order: [['id', 'ASC']] });
 };
@@ -33,6 +34,7 @@ const createPayment = async (payload, file) => {
     balance_amount,
     paid_amount,
     payment_method,
+    invoice_type,
     payment_status,
     payment_done_by,
     created_by,
@@ -42,6 +44,13 @@ const createPayment = async (payload, file) => {
   } = payload;
 
   const picture = file ? file.filename : null;
+  if (!invoice_id) {
+    throw new Error('invoice_id is required');
+  }
+  const resolvedInvoiceType = invoice_type ?? 'Service';
+  if (!['Service', 'Towing Service'].includes(resolvedInvoiceType)) {
+    throw new Error('invoice_type must be Service or Towing Service');
+  }
 
   const transaction = await db.sequelize.transaction();
   try {
@@ -53,6 +62,7 @@ const createPayment = async (payload, file) => {
       paid_amount,
       picture,
       payment_method,
+      invoice_type: resolvedInvoiceType,
       payment_status,
       payment_done_by,
       created_by,
@@ -71,6 +81,7 @@ const createPayment = async (payload, file) => {
       await Sales.create({
         company_id,
         invoice_id,
+        invoice_type: resolvedInvoiceType,
         amount,
         status: 1,
         is_deleted: 0,
@@ -96,7 +107,7 @@ const createPayment = async (payload, file) => {
       await CompanyExpense.create({
         company_id,
         transaction_type: 'Credit',
-        reason: `Verified invoice payment for invoice #${invoice_id}`,
+        reason: `Verified ${resolvedInvoiceType === 'Towing Service' ? 'towing invoice' : 'invoice'} payment for invoice #${invoice_id}`,
         amount,
         balance,
         created_by,
@@ -105,7 +116,8 @@ const createPayment = async (payload, file) => {
     }
 
     if (Number(balance_amount) === 0) {
-      await Invoice.update(
+      const InvoiceModel = resolvedInvoiceType === 'Towing Service' ? TowingInvoice : Invoice;
+      await InvoiceModel.update(
         { payment_status: 'completed' },
         { where: { id: invoice_id, is_deleted: 0 }, transaction },
       );
@@ -154,6 +166,7 @@ const updatePayment = async (id, payload, file) => {
       await Sales.create({
         company_id: payment.company_id,
         invoice_id: payment.invoice_id,
+        invoice_type: payment.invoice_type,
         amount,
         status: 1,
         is_deleted: 0,
@@ -179,7 +192,7 @@ const updatePayment = async (id, payload, file) => {
       await CompanyExpense.create({
         company_id: payment.company_id,
         transaction_type: 'Credit',
-        reason: `Verified invoice payment for invoice #${payment.invoice_id}`,
+        reason: `Verified ${payment.invoice_type === 'Towing Service' ? 'towing invoice' : 'invoice'} payment for invoice #${payment.invoice_id}`,
         amount,
         balance,
         created_by: payment.created_by,

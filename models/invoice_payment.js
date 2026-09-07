@@ -3,12 +3,13 @@
 module.exports = (sequelize, DataTypes) => {
   const InvoicePayment = sequelize.define('InvoicePayment', {
     company_id: { type: DataTypes.INTEGER, allowNull: false },
-    invoice_id: { type: DataTypes.INTEGER, allowNull: false },
+    invoice_id: { type: DataTypes.INTEGER, allowNull: true },
     total_amount: { type: DataTypes.DECIMAL(12, 2), allowNull: false },
     balance_amount: { type: DataTypes.DECIMAL(12, 2), allowNull: false },
     paid_amount: { type: DataTypes.DECIMAL(12, 2), allowNull: false },
     picture: { type: DataTypes.STRING, allowNull: true },
     payment_method: { type: DataTypes.ENUM('cash', 'card', 'bank_transfer', 'online'), allowNull: false },
+    invoice_type: { type: DataTypes.ENUM('Service', 'Towing Service'), allowNull: false, defaultValue: 'Service' },
     payment_status: { type: DataTypes.ENUM('pending', 'not_verified', 'verified', 'rejected'), allowNull: false },
     payment_done_by: { type: DataTypes.ENUM('company', 'customer'), allowNull: false },
     is_deleted: { type: DataTypes.TINYINT, allowNull: false, defaultValue: 0 },

@@ -28,7 +28,12 @@ const getPayment = async (req, res) => {
 const listPayments = async (req, res) => {
   try {
     const payments = await invoicePaymentService.listPayments(req.query);
-    res.json(payments);
+    res.json({
+      success: true,
+      data: payments,
+      total: payments.length,
+      totalPages: 1,
+    });
   } catch (err) {
     console.error('List payments error:', err);
     res.status(500).json({ error: err.message });
