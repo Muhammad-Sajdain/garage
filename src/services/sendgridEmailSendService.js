@@ -302,8 +302,9 @@ class SendgridEmailSendService {
         customerName: customer.name ?? 'â€”', customerEmail: customer.email, customerPhone: customer.phone ?? 'â€”', customerAddress: customer.address ?? 'â€”',
         vehicleMake: vehicle.make ?? 'â€”', vehicleModel: vehicle.model ?? 'â€”', vehicleYear: vehicle.year ? String(vehicle.year) : 'â€”', vin: vehicle.vin ?? vehicle.VIN ?? 'â€”', licensePlate: vehicle.license_plate ?? vehicle.licensePlate ?? 'â€”',
         notes: `Pickup: ${invoice.pick_up_address ?? 'â€”'}\nDrop off: ${invoice.drop_off_address ?? 'â€”'}`, includeLineItems: true,
+        towingDetails: { pickUpAddress: invoice.pick_up_address, dropOffAddress: invoice.drop_off_address },
         lineItems: [{ type: 'service', description: 'Towing service', qty: Number(invoice.miles ?? 0), unitPrice: Number(invoice.rate ?? 0) }],
-        subtotal: Number(invoice.subtotal ?? 0), taxPercentage: Number(invoice.tax_percentage ?? 0), taxAmount: Number(invoice.tax_amount ?? 0), discountPercentage: Number(invoice.discount_percentage ?? 0), discountAmount: Number(invoice.discount ?? 0), total: Number(invoice.total ?? 0), documentTitle: 'TOWING INVOICE',
+        subtotal: Number(invoice.subtotal ?? 0), taxPercentage: Number(invoice.tax_percentage ?? 0), taxAmount: Number(invoice.tax_amount ?? 0), discountPercentage: Number(invoice.discount_percentage ?? 0), discountAmount: Number(invoice.discount ?? 0), total: Number(invoice.total ?? 0), documentTitle: 'TOWING INVOICE', quantityLabel: 'Miles', unitPriceLabel: 'Rate / Mile',
       });
     } catch { throw createHttpError('Unable to generate towing invoice PDF', 500); }
 

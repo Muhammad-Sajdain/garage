@@ -2,7 +2,10 @@ const vehicleService = require('../services/vehicleService');
 
 const getVehicles = async (req, res) => {
   try {
-    const vehicles = await vehicleService.listVehicles(req.query.customer_id);
+    const vehicles = await vehicleService.listVehicles({
+      customer_id: req.query.customer_id,
+      company_id: req.query.company_id,
+    });
     res.json({ success: true, data: vehicles });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

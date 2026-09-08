@@ -15,6 +15,8 @@ module.exports = (sequelize, DataTypes) => {
 
   Sales.associate = (models) => {
     Sales.belongsTo(models.Invoice, { foreignKey: 'invoice_id', as: 'invoice' });
+    // `invoice_id` points to either a service or towing invoice based on `invoice_type`.
+    Sales.belongsTo(models.TowingInvoice, { foreignKey: 'invoice_id', as: 'towingInvoice', constraints: false });
   };
 
   return Sales;

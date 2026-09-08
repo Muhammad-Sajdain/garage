@@ -81,15 +81,27 @@ async function generateDocumentPdfBuffer(payload, { title, numberLabel, noteKey,
   drawSection(rightColX, 'Vehicle Detail', [`Make: ${safePdfText(payload.vehicleMake)}`, `Model: ${safePdfText(payload.vehicleModel)}`, `Year: ${safePdfText(payload.vehicleYear)}`, `VIN: ${safePdfText(payload.vin)}`, `License Plate: ${safePdfText(payload.licensePlate)}`]);
   y += 18 + 5 * 15 + 10; doc.setLineWidth(0.8); doc.line(margin, y, pageWidth - margin, y); y += 18;
 
+  if (payload.towingDetails) {
+    const towingLines = [
+      `Pick Up Address: ${safePdfText(payload.towingDetails.pickUpAddress)}`,
+      `Drop Off Address: ${safePdfText(payload.towingDetails.dropOffAddress)}`,
+    ];
+    drawSection(leftColX, 'Towing Detail', towingLines);
+    y += 18 + towingLines.length * 15 + 10; doc.setLineWidth(0.8); doc.line(margin, y, pageWidth - margin, y); y += 18;
+  }
+
   const isEnabled = payload.includeLineItems !== false;
   const pdfItems = payload.lineItems.length ? payload.lineItems : [{ type: 'service', description: '—', qty: 0, unitPrice: 0 }];
+  const columnStyles = payload.towingDetails
+    ? { 0: { cellWidth: 70 }, 1: { cellWidth: 219 }, 2: { halign: 'right', cellWidth: 55 }, 3: { halign: 'right', cellWidth: 95 }, 4: { halign: 'right', cellWidth: 75 } }
+    : { 0: { cellWidth: 72 }, 1: { cellWidth: 250 }, 2: { halign: 'right', cellWidth: 42 }, 3: { halign: 'right', cellWidth: 82 }, 4: { halign: 'right', cellWidth: 82 } };
   autoTable(doc, {
-    startY: y, head: [['Type', 'Description', 'Qty', 'Unit Price', 'Amount']],
+    startY: y, head: [['Type', 'Description', payload.quantityLabel ?? 'Qty', payload.unitPriceLabel ?? 'Unit Price', 'Amount']],
     body: pdfItems.map((item) => [item.type === 'service' ? 'Service' : 'Parts', safePdfText(item.description, '—'), isEnabled ? String(Number(item.qty || 0)) : '0', formatMoney(isEnabled ? item.unitPrice : 0), formatMoney(isEnabled ? Number(item.qty || 0) * Number(item.unitPrice || 0) : 0)]),
     margin: { left: margin, right: margin }, theme: 'grid',
     styles: { font: 'helvetica', fontSize: 9, cellPadding: 7, textColor: dark, lineColor: BORDER, lineWidth: 0.5, valign: 'middle' },
     headStyles: { fillColor: BRAND_COLOR, textColor: 255, fontStyle: 'bold', halign: 'center' }, alternateRowStyles: { fillColor: [250, 251, 253] },
-    columnStyles: { 0: { cellWidth: 72 }, 1: { cellWidth: 250 }, 2: { halign: 'right', cellWidth: 42 }, 3: { halign: 'right', cellWidth: 82 }, 4: { halign: 'right', cellWidth: 82 } },
+    columnStyles,
   });
   y = doc.lastAutoTable?.finalY ? doc.lastAutoTable.finalY + 18 : y + 18;
   if (y + 172 > pageHeight - margin) { doc.addPage(); y = margin; }
@@ -99,7 +111,7 @@ async function generateDocumentPdfBuffer(payload, { title, numberLabel, noteKey,
   [['Subtotal', formatMoney(isEnabled ? payload.subtotal : 0)], [`Tax (${isEnabled ? payload.taxPercentage : 0}%)`, formatMoney(isEnabled ? payload.taxAmount : 0)], [`Discount (${isEnabled ? payload.discountPercentage : 0}%)`, formatMoney(isEnabled ? payload.discountAmount : 0)]].forEach(([label, value]) => { doc.text(label, summaryX, rowY); doc.text(value, summaryX + summaryWidth, rowY, { align: 'right' }); rowY += 20; });
   doc.setFont('helvetica', 'bold'); doc.setFontSize(13); doc.setDrawColor(0, 0, 0); doc.line(summaryX, rowY - 2, summaryX + summaryWidth, rowY - 2); doc.text('Total', summaryX, rowY + 16); doc.text(formatMoney(isEnabled ? payload.total : 0), summaryX + summaryWidth, rowY + 16, { align: 'right' });
   y = rowY + 30;
-  if (payload[noteKey]?.trim()) { if (y + 52 > pageHeight - margin) { doc.addPage(); y = margin; } doc.setTextColor(0, 0, 0); doc.setFont('helvetica', 'bold'); doc.setFontSize(8); doc.setCharSpace(1.1); doc.text('NOTE', margin, y); doc.setCharSpace(0); doc.setFont('helvetica', 'normal'); doc.setFontSize(10); const noteLines = doc.splitTextToSize(safePdfText(payload[noteKey]), contentWidth); doc.text(noteLines, margin, y + 14); }
+  if (!payload.towingDetails && payload[noteKey]?.trim()) { if (y + 52 > pageHeight - margin) { doc.addPage(); y = margin; } doc.setTextColor(0, 0, 0); doc.setFont('helvetica', 'bold'); doc.setFontSize(8); doc.setCharSpace(1.1); doc.text('NOTE', margin, y); doc.setCharSpace(0); doc.setFont('helvetica', 'normal'); doc.setFontSize(10); const noteLines = doc.splitTextToSize(safePdfText(payload[noteKey]), contentWidth); doc.text(noteLines, margin, y + 14); }
   return Buffer.from(doc.output('arraybuffer'));
 }
 
