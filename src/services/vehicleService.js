@@ -2,19 +2,29 @@ const db = require('../../models');
 
 const Vehicle = db.Vehicle;
 const InsuredVehicle = db.InsuredVehicle;
+const Customer = db.Customer;
 
-const listVehicles = async (customer_id) => {
+const listVehicles = async ({ customer_id, company_id } = {}) => {
   return Vehicle.findAll({
     where: {
       is_deleted: 0,
       ...(customer_id ? { customer_id } : {}),
     },
-    include: [{
-      model: InsuredVehicle,
-      as: 'insuredVehicle',
-      where: { is_deleted: 0 },
-      required: false,
-    }],
+    include: [
+      {
+        model: Customer,
+        as: 'customer',
+        attributes: ['id', 'name', 'company_id'],
+        where: { is_deleted: 0, ...(company_id ? { company_id } : {}) },
+        required: Boolean(company_id),
+      },
+      {
+        model: InsuredVehicle,
+        as: 'insuredVehicle',
+        where: { is_deleted: 0 },
+        required: false,
+      },
+    ],
     order: [['id', 'ASC']],
   });
 };

@@ -23,6 +23,9 @@ module.exports = (sequelize, DataTypes) => {
 
   InvoicePayment.associate = models => {
     InvoicePayment.belongsTo(models.Invoice, { foreignKey: 'invoice_id', as: 'invoice' });
+    // `invoice_id` can reference either a service invoice or a towing invoice.
+    // Keep this association unconstrained because the column is polymorphic.
+    InvoicePayment.belongsTo(models.TowingInvoice, { foreignKey: 'invoice_id', as: 'towingInvoice', constraints: false });
     // Optional association to Company if model exists
     if (models.Company) {
       InvoicePayment.belongsTo(models.Company, { foreignKey: 'company_id', as: 'company' });

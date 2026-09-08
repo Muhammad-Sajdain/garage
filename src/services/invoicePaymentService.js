@@ -11,18 +11,44 @@ const {
   CompanyAccount,
 } = db;
 
+const paymentIncludes = [
+  { model: Invoice, as: 'invoice' },
+  { model: TowingInvoice, as: 'towingInvoice' },
+];
+
+const withInvoiceNumber = (payment) => {
+  const record = payment.toJSON ? payment.toJSON() : payment;
+  const sourceInvoice = record.invoice_type === 'Towing Service' ? record.towingInvoice : record.invoice;
+  return {
+    ...record,
+    invoice_number: sourceInvoice?.invoice_number ?? null,
+  };
+};
+
+const getInvoiceNumber = async ({ invoice_id, invoice_type, transaction }) => {
+  const InvoiceModel = invoice_type === 'Towing Service' ? TowingInvoice : Invoice;
+  const invoice = await InvoiceModel.findOne({
+    where: { id: invoice_id, is_deleted: 0 },
+    attributes: ['invoice_number'],
+    transaction,
+  });
+  return invoice?.invoice_number ?? invoice_id;
+};
+
 // Helper to fetch a payment with its invoice association
 const getPaymentById = async (id) => {
-  return InvoicePayment.findOne({
+  const payment = await InvoicePayment.findOne({
     where: { id, is_deleted: 0 },
-    include: [{ model: Invoice, as: 'invoice' }]
+    include: paymentIncludes,
   });
+  return payment ? withInvoiceNumber(payment) : null;
 };
 
 // List payments (supports simple filter object)
 const listPayments = async ({ page, limit, dateField, startDate, endDate, ...filters } = {}) => {
   const where = { is_deleted: 0, ...filters };
-  return InvoicePayment.findAll({ where, include: [{ model: Invoice, as: 'invoice' }], order: [['id', 'ASC']] });
+  const payments = await InvoicePayment.findAll({ where, include: paymentIncludes, order: [['id', 'ASC']] });
+  return payments.map(withInvoiceNumber);
 };
 
 // Create a new payment record; `file` is the uploaded image (multer)
@@ -104,10 +130,15 @@ const createPayment = async (payload, file) => {
       }
 
       const balance = Number(((Number(account.current_amount) || 0) + amount).toFixed(2));
+      const invoiceNumber = await getInvoiceNumber({
+        invoice_id,
+        invoice_type: resolvedInvoiceType,
+        transaction,
+      });
       await CompanyExpense.create({
         company_id,
         transaction_type: 'Credit',
-        reason: `Verified ${resolvedInvoiceType === 'Towing Service' ? 'towing invoice' : 'invoice'} payment for invoice #${invoice_id}`,
+        reason: `Verified ${resolvedInvoiceType === 'Towing Service' ? 'towing invoice' : 'invoice'} payment for invoice #${invoiceNumber}`,
         amount,
         balance,
         created_by,
@@ -189,10 +220,15 @@ const updatePayment = async (id, payload, file) => {
       }
 
       const balance = Number(((Number(account.current_amount) || 0) + amount).toFixed(2));
+      const invoiceNumber = await getInvoiceNumber({
+        invoice_id: payment.invoice_id,
+        invoice_type: payment.invoice_type,
+        transaction,
+      });
       await CompanyExpense.create({
         company_id: payment.company_id,
         transaction_type: 'Credit',
-        reason: `Verified ${payment.invoice_type === 'Towing Service' ? 'towing invoice' : 'invoice'} payment for invoice #${payment.invoice_id}`,
+        reason: `Verified ${payment.invoice_type === 'Towing Service' ? 'towing invoice' : 'invoice'} payment for invoice #${invoiceNumber}`,
         amount,
         balance,
         created_by: payment.created_by,
