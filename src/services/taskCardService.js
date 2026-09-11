@@ -1,6 +1,6 @@
 // src/services/taskCardService.js
 const db = require('../../models');
-const { TaskCard, Task, TaskAssignment, Quotation, Vehicle, Customer } = db;
+const { TaskCard, Task, TaskAssignment, Quotation, QuotationDetail, Vehicle, Customer } = db;
 
 const taskInclude = {
   model: Task,
@@ -11,11 +11,14 @@ const taskInclude = {
 const quotationInclude = {
   model: Quotation,
   as: 'quotation',
-  include: [{
-    model: Vehicle,
-    as: 'vehicle',
-    include: [{ model: Customer, as: 'customer' }],
-  }],
+  include: [
+    { model: QuotationDetail, as: 'details', where: { is_deleted: 0 }, required: false },
+    {
+      model: Vehicle,
+      as: 'vehicle',
+      include: [{ model: Customer, as: 'customer' }],
+    },
+  ],
 };
 
 // List task cards (optional filters) with associated tasks
