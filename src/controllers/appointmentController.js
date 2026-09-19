@@ -4,9 +4,8 @@ const appointmentService = require('../services/appointmentService');
 // List appointments (supports optional query filters)
 const listAppointments = async (req, res) => {
   try {
-    const filters = req.query; // e.g., ?status=confirmed&company_id=2
-    const appointments = await appointmentService.listAppointments(filters);
-    res.json({ success: true, data: appointments });
+    const result = await appointmentService.listAppointments(req.query);
+    res.json({ success: true, ...result });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
