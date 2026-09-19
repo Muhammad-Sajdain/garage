@@ -1,4 +1,5 @@
 // src/services/customerReviewService.js
+const { Op } = require('sequelize');
 const db = require('../../models');
 const { CustomerReview, TaskCard } = db;
 
@@ -11,9 +12,36 @@ const getReviewById = async (id) => {
 };
 
 // List reviews with optional filters
-const listReviews = async (filters = {}) => {
-  const where = { is_deleted: 0, ...filters };
-  return CustomerReview.findAll({ where, include: [{ model: TaskCard, as: 'taskCard' }], order: [['id', 'ASC']] });
+const listReviews = async (query = {}) => {
+  const page = Math.max(Number.parseInt(query.page, 10) || 1, 1);
+  const limit = Math.min(Math.max(Number.parseInt(query.limit, 10) || 10, 1), 100);
+  const where = { is_deleted: 0 };
+
+  if (query.company_id) where.company_id = query.company_id;
+  if (query.status) where.status = query.status;
+  if (query.task_card_id) where.task_card_id = query.task_card_id;
+
+  const validDateFields = new Set(['createdAt', 'updatedAt']);
+  const dateField = validDateFields.has(query.dateField) ? query.dateField : 'createdAt';
+  if (query.startDate || query.endDate) {
+    where[dateField] = {};
+    if (query.startDate) where[dateField][Op.gte] = new Date(`${query.startDate}T00:00:00`);
+    if (query.endDate) where[dateField][Op.lte] = new Date(`${query.endDate}T23:59:59.999`);
+  }
+
+  const { count, rows } = await CustomerReview.findAndCountAll({
+    where,
+    include: [{ model: TaskCard, as: 'taskCard' }],
+    order: [['id', 'ASC']],
+    limit,
+    offset: (page - 1) * limit,
+  });
+
+  return {
+    data: rows,
+    total: count,
+    totalPages: Math.max(Math.ceil(count / limit), 1),
+  };
 };
 
 // Create a new review

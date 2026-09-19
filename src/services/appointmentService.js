@@ -1,15 +1,38 @@
 // src/services/appointmentService.js
+const { Op } = require('sequelize');
 const db = require('../../models');
 const { Appointment, Company } = db;
 
 // List all appointments (excluding soft‑deleted)
-const listAppointments = async (filters = {}) => {
-  const where = { is_deleted: 0, ...filters };
-  return Appointment.findAll({
+const listAppointments = async (query = {}) => {
+  const page = Math.max(Number.parseInt(query.page, 10) || 1, 1);
+  const limit = Math.min(Math.max(Number.parseInt(query.limit, 10) || 10, 1), 100);
+  const where = { is_deleted: 0 };
+
+  if (query.company_id) where.company_id = query.company_id;
+  if (query.status) where.status = query.status;
+
+  const validDateFields = new Set(['createdAt', 'updatedAt', 'reservation_date']);
+  const dateField = validDateFields.has(query.dateField) ? query.dateField : 'createdAt';
+  if (query.startDate || query.endDate) {
+    where[dateField] = {};
+    if (query.startDate) where[dateField][Op.gte] = new Date(`${query.startDate}T00:00:00`);
+    if (query.endDate) where[dateField][Op.lte] = new Date(`${query.endDate}T23:59:59.999`);
+  }
+
+  const { count, rows } = await Appointment.findAndCountAll({
     where,
     include: [{ model: Company, as: 'company' }],
     order: [['id', 'ASC']],
+    limit,
+    offset: (page - 1) * limit,
   });
+
+  return {
+    data: rows,
+    total: count,
+    totalPages: Math.max(Math.ceil(count / limit), 1),
+  };
 };
 
 // Get a single appointment by id
