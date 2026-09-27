@@ -14,6 +14,7 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
   Role.init({
+    company_id: DataTypes.INTEGER,
     name: DataTypes.STRING,
     status: DataTypes.TINYINT,
     is_deleted: DataTypes.TINYINT
@@ -21,5 +22,9 @@ module.exports = (sequelize, DataTypes) => {
     sequelize,
     modelName: 'Role',
   });
+  Role.associate = models => {
+    Role.belongsTo(models.Company, { foreignKey: 'company_id', as: 'company' });
+    Role.hasMany(models.RolePermission, { foreignKey: 'role_id', as: 'permissions' });
+  };
   return Role;
 };

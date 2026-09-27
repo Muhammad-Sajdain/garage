@@ -6,6 +6,7 @@ const Admin = db.Admin;
 const Users = db.Users;
 const CompanyUser = db.CompanyUser;
 const Role = db.Role;
+const RolePermission = db.RolePermission;
 const Customer = db.Customer;
 
 const JWT_SECRET = process.env.JWT_SECRET || 'garage-secret-key';
@@ -18,6 +19,35 @@ const hashPassword = async (password) => {
 
 const createToken = (payload) => {
   return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+};
+
+const parsePermission = (permission) => {
+  if (!permission) return {};
+  if (typeof permission === 'string') {
+    try {
+      return JSON.parse(permission);
+    } catch {
+      return {};
+    }
+  }
+  return permission;
+};
+
+const getCompanyRoleAccess = async (roleId, companyId) => {
+  if (!roleId || !companyId) return { role: null, permissions: {} };
+
+  const role = await Role.findOne({
+    where: { id: roleId, company_id: companyId, is_deleted: 0, status: 1 },
+    attributes: ['id', 'name', 'company_id'],
+  });
+  if (!role) return { role: null, permissions: {} };
+
+  const rolePermission = await RolePermission.findOne({
+    where: { role_id: role.id, is_deleted: 0, status: 1 },
+    order: [['id', 'DESC']],
+  });
+
+  return { role, permissions: parsePermission(rolePermission?.permission) };
 };
 
 const loginAdmin = async (payload) => {
@@ -85,31 +115,31 @@ const loginUser = async (payload) => {
   }
 
   const companyUser = await CompanyUser.findOne({
-    where: { user_id: user.id, is_deleted: 0 },
-    include: [
-      {
-        model: Role,
-        as: 'role',
-        attributes: ['id', 'name'],
-      },
-    ],
+    where: { user_id: user.id, is_deleted: 0, status: 1 },
+    order: [['id', 'ASC']],
   });
-
-  const roleName = companyUser && companyUser.role ? companyUser.role.name : null;
+  const companyId = companyUser?.company_id ?? null;
+  const roleId = companyUser?.role_id ?? null;
+  const { role, permissions } = await getCompanyRoleAccess(roleId, companyId);
+  const roleName = role?.name ?? null;
 
   const token = createToken({
     sub: user.id,
     id: user.id,
     email: user.email,
     role: roleName,
-    company_id: companyUser ? companyUser.company_id : null,
+    company_id: companyId,
+    role_id: roleId,
+    permissions,
   });
 
   return {
     success: true,
     token,
     role: roleName,
-    company_id: companyUser ? companyUser.company_id : null,
+    company_id: companyId,
+    role_id: roleId,
+    permissions,
     user: {
       id: user.id,
       name: user.name,
@@ -118,6 +148,8 @@ const loginUser = async (payload) => {
       phone: user.phone,
       address: user.address,
       role: roleName,
+      role_id: roleId,
+      permissions,
     },
   };
 };
@@ -146,6 +178,15 @@ const loginCustomer = async (payload) => {
     throw new Error('Invalid email or password');
   }
 
+  let roleId = customer.role_id ?? null;
+  if (!roleId && customer.company_id) {
+    const customerRole = await Role.findOne({
+      where: { company_id: customer.company_id, name: 'Customer', is_deleted: 0, status: 1 },
+      attributes: ['id'],
+    });
+    roleId = customerRole?.id ?? null;
+  }
+  const { permissions } = await getCompanyRoleAccess(roleId, customer.company_id);
   const role = 'Customer';
   const token = createToken({
     sub: customer.id,
@@ -153,6 +194,8 @@ const loginCustomer = async (payload) => {
     email: customer.email,
     role,
     company_id: customer.company_id,
+    role_id: roleId,
+    permissions,
   });
 
   return {
@@ -160,6 +203,8 @@ const loginCustomer = async (payload) => {
     token,
     role,
     company_id: customer.company_id,
+    role_id: roleId,
+    permissions,
     user: {
       id: customer.id,
       name: customer.name,
@@ -167,6 +212,8 @@ const loginCustomer = async (payload) => {
       phone: customer.phone,
       address: customer.address,
       role,
+      role_id: roleId,
+      permissions,
       company_id: customer.company_id,
     },
   };

@@ -9,6 +9,11 @@ module.exports = (sequelize, DataTypes) => {
         as: 'company',
       });
 
+      Customer.belongsTo(models.Role, {
+        foreignKey: 'role_id',
+        as: 'role',
+      });
+
       Customer.hasMany(models.Vehicle, {
         foreignKey: 'customer_id',
         as: 'vehicles',
@@ -45,6 +50,10 @@ module.exports = (sequelize, DataTypes) => {
         defaultValue: 0,
       },
       company_id: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      role_id: {
         type: DataTypes.INTEGER,
         allowNull: true,
       },
