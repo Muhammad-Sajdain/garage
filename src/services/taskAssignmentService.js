@@ -32,7 +32,7 @@ const listTaskAssignments = async (filters = {}) => {
   const where = { is_deleted: 0 };
 
   if (task_id !== undefined) where.task_id = task_id;
-  if (user_id !== undefined) where.user_id = user_id;
+  if (user_id !== undefined) where['$task.taskCard.quotation.vehicle.customer_id$'] = Number(user_id);
   if (status !== undefined) where.status = status;
   if (company_id !== undefined) where['$task.taskCard.company_id$'] = company_id;
 

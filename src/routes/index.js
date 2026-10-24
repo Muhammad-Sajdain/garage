@@ -33,6 +33,8 @@ const companyExpenseRoutes = require('./companyExpenseRoutes');
 const communicationLogRoutes = require('./communicationLogRoutes');
 const notificationRoutes = require('./notificationRoutes');
 const moduleRoutes = require('./moduleRoutes');
+const demoBookingRoutes = require('./demoBookingRoutes');
+const packageSaleRoutes = require('./packageSaleRoutes');
 
 const router = express.Router();
 
@@ -43,6 +45,8 @@ router.use('/admins', adminRoutes);
 router.use('/users', usersRoutes);
 router.use('/roles', roleRoutes);
 router.use('/modules', moduleRoutes);
+router.use('/demo-bookings', demoBookingRoutes);
+router.use('/company-sales', packageSaleRoutes);
 router.use('/companies', companyRoutes);
 router.use('/company-accounts', companyAccountRoutes);
 router.use('/company-expenses', companyExpenseRoutes);

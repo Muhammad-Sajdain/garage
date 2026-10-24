@@ -8,6 +8,8 @@ const CompanyUser = db.CompanyUser;
 const Role = db.Role;
 const RolePermission = db.RolePermission;
 const Customer = db.Customer;
+const PackageHistory = db.PackageHistory;
+const profilePictureService = require('./profilePictureService');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'garage-secret-key';
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
@@ -120,6 +122,25 @@ const loginUser = async (payload) => {
   });
   const companyId = companyUser?.company_id ?? null;
   const roleId = companyUser?.role_id ?? null;
+
+  if (!companyId) {
+    throw new Error('This user is not linked to an active company');
+  }
+
+  const latestPackageHistory = await PackageHistory.findOne({
+    where: { company_id: companyId, is_deleted: 0 },
+    order: [['id', 'DESC']],
+  });
+
+  if (!latestPackageHistory || Number(latestPackageHistory.status) !== 1) {
+    throw new Error('Your company does not have an active package subscription');
+  }
+
+  const packageEndDate = new Date(latestPackageHistory.end_date);
+  if (Number.isNaN(packageEndDate.getTime()) || packageEndDate.getTime() < Date.now()) {
+    throw new Error('Your company package subscription has expired');
+  }
+
   const { role, permissions } = await getCompanyRoleAccess(roleId, companyId);
   const roleName = role?.name ?? null;
 
@@ -137,6 +158,7 @@ const loginUser = async (payload) => {
     success: true,
     token,
     role: roleName,
+    role_name: roleName,
     company_id: companyId,
     role_id: roleId,
     permissions,
@@ -145,9 +167,12 @@ const loginUser = async (payload) => {
       name: user.name,
       email: user.email,
       country: user.country,
+      state: user.state,
       phone: user.phone,
       address: user.address,
+      logo: user.logo,
       role: roleName,
+      role_name: roleName,
       role_id: roleId,
       permissions,
     },
@@ -186,13 +211,13 @@ const loginCustomer = async (payload) => {
     });
     roleId = customerRole?.id ?? null;
   }
-  const { permissions } = await getCompanyRoleAccess(roleId, customer.company_id);
-  const role = 'Customer';
+  const { role: customerRole, permissions } = await getCompanyRoleAccess(roleId, customer.company_id);
+  const roleName = customerRole?.name ?? 'Customer';
   const token = createToken({
     sub: customer.id,
     id: customer.id,
     email: customer.email,
-    role,
+    role: roleName,
     company_id: customer.company_id,
     role_id: roleId,
     permissions,
@@ -201,7 +226,8 @@ const loginCustomer = async (payload) => {
   return {
     success: true,
     token,
-    role,
+    role: roleName,
+    role_name: roleName,
     company_id: customer.company_id,
     role_id: roleId,
     permissions,
@@ -211,7 +237,8 @@ const loginCustomer = async (payload) => {
       email: customer.email,
       phone: customer.phone,
       address: customer.address,
-      role,
+      role: roleName,
+      role_name: roleName,
       role_id: roleId,
       permissions,
       company_id: customer.company_id,
@@ -245,7 +272,7 @@ const changePassword = async (token, newPassword) => {
   return { success: true, message: 'Password updated successfully' };
 };
 
-const updateProfile = async (token, payload) => {
+const updateProfile = async (token, payload, file) => {
   let claims;
   try {
     claims = jwt.verify(token, JWT_SECRET);
@@ -255,7 +282,7 @@ const updateProfile = async (token, payload) => {
 
   const userId = claims.sub || claims.id;
   let model = Users;
-  let allowedFields = ['name', 'email', 'phone', 'address', 'country'];
+  let allowedFields = ['name', 'email', 'phone', 'address', 'country', 'state'];
   if (claims.role === 'SuperAdmin') {
     model = Admin;
     allowedFields = ['name', 'email', 'phone'];
@@ -275,7 +302,23 @@ const updateProfile = async (token, payload) => {
       .filter((field) => payload[field] !== undefined)
       .map((field) => [field, payload[field]])
   );
-  await account.update(updateData);
+  let uploadedLogo;
+  const previousLogo = model === Users ? account.logo : null;
+  if (model === Users && file) {
+    uploadedLogo = await profilePictureService.saveProfilePicture(file);
+    updateData.logo = uploadedLogo;
+  } else if (model === Users && (payload.remove_logo === 'true' || payload.remove_logo === true)) {
+    updateData.logo = null;
+  }
+  try {
+    await account.update(updateData);
+  } catch (error) {
+    if (uploadedLogo) profilePictureService.removeProfilePicture(uploadedLogo);
+    else profilePictureService.removeUploadedFile(file);
+    throw error;
+  }
+  if (uploadedLogo && previousLogo) profilePictureService.removeProfilePicture(previousLogo);
+  if (!uploadedLogo && updateData.logo === null && previousLogo) profilePictureService.removeProfilePicture(previousLogo);
 
   const profile = account.toJSON();
   delete profile.password;

@@ -2,18 +2,39 @@
 const path = require('path');
 const fs = require('fs');
 const db = require('../../models');
+const { Op } = require('sequelize');
 const {
   InvoicePayment,
   Invoice,
   TowingInvoice,
+  TaskCard,
+  Quotation,
+  Vehicle,
+  Customer,
   Sales,
   CompanyExpense,
   CompanyAccount,
 } = db;
 
 const paymentIncludes = [
-  { model: Invoice, as: 'invoice' },
-  { model: TowingInvoice, as: 'towingInvoice' },
+  {
+    model: Invoice,
+    as: 'invoice',
+    include: [{
+      model: TaskCard,
+      as: 'taskCard',
+      include: [{
+        model: Quotation,
+        as: 'quotation',
+        include: [{ model: Vehicle, as: 'vehicle', include: [{ model: Customer, as: 'customer' }] }],
+      }],
+    }],
+  },
+  {
+    model: TowingInvoice,
+    as: 'towingInvoice',
+    include: [{ model: Vehicle, as: 'vehicle', include: [{ model: Customer, as: 'customer' }] }],
+  },
 ];
 
 const withInvoiceNumber = (payment) => {
@@ -45,8 +66,24 @@ const getPaymentById = async (id) => {
 };
 
 // List payments (supports simple filter object)
-const listPayments = async ({ page, limit, dateField, startDate, endDate, ...filters } = {}) => {
+const listPayments = async ({ page, limit, search, dateField, startDate, endDate, customer_id, ...filters } = {}) => {
   const where = { is_deleted: 0, ...filters };
+  if (customer_id !== undefined) {
+    const customerId = Number(customer_id);
+    if (!Number.isInteger(customerId) || customerId <= 0) {
+      throw new Error('customer_id must be a positive number');
+    }
+    where[Op.or] = [
+      {
+        invoice_type: 'Service',
+        '$invoice.taskCard.quotation.vehicle.customer_id$': customerId,
+      },
+      {
+        invoice_type: 'Towing Service',
+        '$towingInvoice.vehicle.customer_id$': customerId,
+      },
+    ];
+  }
   const payments = await InvoicePayment.findAll({ where, include: paymentIncludes, order: [['id', 'ASC']] });
   return payments.map(withInvoiceNumber);
 };

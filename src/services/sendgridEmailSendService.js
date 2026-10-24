@@ -1,16 +1,59 @@
 // src/services/sendgridEmailSendService.js
 const path = require('path');
 const fs = require('fs');
-const sgMail = require('@sendgrid/mail');
 const db = require('../../models');
 const invoiceService = require('./invoiceService');
 const towingInvoiceService = require('./towingInvoiceService');
 const quotationService = require('./quotationService');
+const taskCardService = require('./taskCardService');
 const communicationLogService = require('./communicationLogService');
 const { generateInvoicePdfBuffer, generateQuotationPdfBuffer } = require('./invoicePdfService');
 const { SendgridSetting, Customer, Company } = db;
 
 const createHttpError = (message, status) => Object.assign(new Error(message), { status });
+const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (character) => ({
+  '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+})[character]);
+
+const buildDocumentEmailContent = ({ customerName, vehicle, companyName, documentType }) => {
+  const details = {
+    make: vehicle.make || '—',
+    model: vehicle.model || '—',
+    year: vehicle.year ? String(vehicle.year) : '—',
+    vin: vehicle.vin ?? vehicle.VIN ?? '—',
+  };
+  const greetingName = customerName || 'Customer';
+  const shopName = companyName || 'our company';
+  const isQuotation = documentType === 'quotation';
+  const intro = isQuotation
+    ? 'Please find attached the quotation for the requested vehicle repair or services.'
+    : `Please find attached the ${documentType} for your reference and records.`;
+  const review = isQuotation
+    ? 'Kindly review the attached quotation and let us know if you would like to proceed with the proposed work.'
+    : `Kindly review the attached ${documentType}.`;
+  const closing = isQuotation
+    ? `Thank you for considering ${shopName}. We look forward to your approval and the opportunity to serve you.`
+    : `Thank you for choosing ${shopName}. We appreciate your trust in our services and look forward to serving you again.`;
+  const questions = isQuotation
+    ? '\n\nShould you have any questions or require further clarification, please feel free to contact us.'
+    : '';
+  const text = `Dear ${greetingName},\n\n${intro}\n\nVehicle Details:\n\nMake: ${details.make}\n\nModel: ${details.model}\n\nYear: ${details.year}\n\nVIN: ${details.vin}\n\n${review}${questions}\n\n${closing}\n\nBest regards,\n${shopName}`;
+  const html = `<p>Dear ${escapeHtml(greetingName)},</p>
+    <p>${escapeHtml(intro)}</p>
+    <p><strong>Vehicle Details:</strong></p>
+    <ul>
+      <li><strong>Make:</strong> ${escapeHtml(details.make)}</li>
+      <li><strong>Model:</strong> ${escapeHtml(details.model)}</li>
+      <li><strong>Year:</strong> ${escapeHtml(details.year)}</li>
+      <li><strong>VIN:</strong> ${escapeHtml(details.vin)}</li>
+    </ul>
+    <p>${escapeHtml(review)}</p>
+    ${isQuotation ? '<p>Should you have any questions or require further clarification, please feel free to contact us.</p>' : ''}
+    <p>${escapeHtml(closing)}</p>
+    <p>Best regards,<br>${escapeHtml(shopName)}</p>`;
+
+  return { text, html };
+};
 
 class SendgridEmailSendService {
   async createEmailCommunicationLog({ companyId, userId }) {
@@ -27,7 +70,7 @@ class SendgridEmailSendService {
   }
 
   /**
-   * Helper to format attachments into SendGrid expected structure.
+   * Helper to normalize supported attachment inputs into Resend's format.
    */
   formatAttachments(attachmentInput, reqFile) {
     const attachments = [];
@@ -94,29 +137,29 @@ class SendgridEmailSendService {
   }
 
   /**
-   * Send an email using company SendGrid credentials to a customer's email.
+   * Send an email using the company's Resend API key to a customer's email.
    * @param {Object} params
-   * @param {number} params.companyId - ID of the company whose SendGrid settings to use.
+   * @param {number} params.companyId - ID of the company whose email settings to use.
    * @param {number} params.customerId - ID of the customer to receive the email.
    * @param {string} params.message - Text/HTML body message.
    * @param {string} [params.subject] - Email subject.
    * @param {string} [params.fromEmail] - Optional sender email.
    * @param {Object|Array|string} [params.attachment] - Attachment content or object.
    * @param {Object} [params.reqFile] - Express multer file object if uploaded via form-data.
-   * @returns {Promise<Object>} SendGrid email dispatch result.
+   * @returns {Promise<Object>} Resend email dispatch result.
    */
-  async sendEmail({ companyId, customerId, message, subject, fromEmail, attachment, reqFile }) {
+  async sendEmail({ companyId, customerId, message, subject, fromEmail, attachment, reqFile, htmlContent }) {
     if (!companyId || !customerId || !message) {
       throw new Error('Missing required fields: company_id, customer_id, or message');
     }
 
-    // 1. Fetch SendGrid settings for company
+    // API keys remain in the existing settings column for compatibility.
     const setting = await SendgridSetting.findOne({
       where: { company_id: companyId, is_deleted: 0 },
     });
 
     if (!setting || !setting.sendgrid_api_key) {
-      throw new Error('SendGrid settings or API key not found for the specified company');
+      throw createHttpError('Resend API key is missing from this company\'s email settings', 400);
     }
 
     // 2. Fetch customer email
@@ -143,37 +186,54 @@ class SendgridEmailSendService {
     }
 
     if (!senderEmail) {
-      senderEmail = process.env.SENDGRID_FROM_EMAIL || 'noreply@garage.com';
+      senderEmail = process.env.RESEND_FROM_EMAIL;
     }
+    if (!senderEmail) throw createHttpError('Resend sender email is not configured', 400);
 
-    // 4. Configure SendGrid API key
-    sgMail.setApiKey(setting.sendgrid_api_key);
-
-    // 5. Format attachments if present
     const formattedAttachments = this.formatAttachments(attachment, reqFile);
+    const attachments = formattedAttachments?.map((item) => ({
+      filename: item.filename,
+      content: item.content,
+      content_type: item.type,
+    }));
 
-    // 6. Build message payload
-    const msg = {
-      to: customer.email,
-      from: senderEmail,
-      subject: subject || 'Notification from Garage',
-      text: message,
-      html: `<p>${message.replace(/\n/g, '<br>')}</p>`,
-    };
-
-    if (formattedAttachments) {
-      msg.attachments = formattedAttachments;
+    let response;
+    try {
+      response = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${setting.sendgrid_api_key}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          from: senderEmail,
+          to: customer.email,
+          subject: subject || 'Notification from Garage',
+          text: message,
+          html: htmlContent || `<p>${message.replace(/\n/g, '<br>')}</p>`,
+          ...(attachments?.length ? { attachments } : {}),
+        }),
+      });
+    } catch (error) {
+      console.error('Resend email request failed:', error.message);
+      throw createHttpError('Unable to send email. Please contact the IT support team to resolve this matter.', 502);
     }
 
-    // 7. Send email
-    const response = await sgMail.send(msg);
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      console.error('Resend email failed:', response.status, error);
+      throw createHttpError('Unable to send email. Please contact the IT support team to resolve this matter.', 502);
+    }
+
+    const result = await response.json().catch(() => ({}));
 
     return {
       success: true,
       message: 'Email sent successfully',
       to: customer.email,
       from: senderEmail,
-      statusCode: response[0] ? response[0].statusCode : 202,
+      id: result.id,
+      statusCode: response.status,
     };
   }
 
@@ -194,12 +254,12 @@ class SendgridEmailSendService {
     if (!customer || customer.is_deleted) throw createHttpError('Customer not found for this vehicle', 404);
     if (!customer.email) throw createHttpError('Customer does not have an email address', 400);
 
-    // The table uses `email` as the SendGrid sender email field.
+    // Use the company's configured sender address with the Resend API key.
     const setting = await SendgridSetting.findOne({
       where: { company_id: invoice.company_id, is_deleted: 0 },
     });
     if (!setting || !setting.sendgrid_api_key || !setting.email) {
-      throw createHttpError('SendGrid settings are missing for this company', 400);
+      throw createHttpError('Resend API key or sender email is missing from this company\'s email settings', 400);
     }
 
     const company = await Company.findOne({ where: { id: invoice.company_id, is_deleted: 0 } });
@@ -251,10 +311,17 @@ class SendgridEmailSendService {
     }
 
     try {
+      const emailContent = buildDocumentEmailContent({
+        customerName: customer.name,
+        vehicle,
+        companyName: company.name,
+        documentType: 'invoice',
+      });
       const result = await this.sendEmail({
         companyId: invoice.company_id,
         customerId: customer.id,
-        message: 'Your invoice is ready. Please review the attached document.',
+        message: emailContent.text,
+        htmlContent: emailContent.html,
         subject: 'Invoice Ready',
         fromEmail: setting.email,
         attachment: {
@@ -288,7 +355,7 @@ class SendgridEmailSendService {
     if (!customer || customer.is_deleted || !customer.email) throw createHttpError('Customer does not have an email address', 400);
 
     const setting = await SendgridSetting.findOne({ where: { company_id: invoice.company_id, is_deleted: 0 } });
-    if (!setting?.sendgrid_api_key || !setting.email) throw createHttpError('SendGrid settings are missing for this company', 400);
+    if (!setting?.sendgrid_api_key || !setting.email) throw createHttpError('Resend API key or sender email is missing from this company\'s email settings', 400);
     const company = await Company.findOne({ where: { id: invoice.company_id, is_deleted: 0 } });
     if (!company) throw createHttpError('Company not found for this towing invoice', 404);
 
@@ -308,8 +375,14 @@ class SendgridEmailSendService {
       });
     } catch { throw createHttpError('Unable to generate towing invoice PDF', 500); }
 
+    const emailContent = buildDocumentEmailContent({
+      customerName: customer.name,
+      vehicle,
+      companyName: company.name,
+      documentType: 'towing invoice',
+    });
     const result = await this.sendEmail({
-      companyId: invoice.company_id, customerId: customer.id, message: 'Your towing invoice is ready. Please review the attached document.', subject: 'Towing Invoice Ready', fromEmail: setting.email,
+      companyId: invoice.company_id, customerId: customer.id, message: emailContent.text, htmlContent: emailContent.html, subject: 'Towing Invoice Ready', fromEmail: setting.email,
       attachment: { content: pdfBuffer.toString('base64'), filename: `Towing-Invoice-${invoice.invoice_number ?? invoice.id}.pdf`, type: 'application/pdf' },
     });
     await this.createEmailCommunicationLog({ companyId: invoice.company_id, userId: invoice.created_by });
@@ -330,7 +403,7 @@ class SendgridEmailSendService {
 
     const setting = await SendgridSetting.findOne({ where: { company_id: quotation.company_id, is_deleted: 0 } });
     if (!setting || !setting.sendgrid_api_key || !setting.email) {
-      throw createHttpError('SendGrid settings are missing for this company', 400);
+      throw createHttpError('Resend API key or sender email is missing from this company\'s email settings', 400);
     }
     const company = await Company.findOne({ where: { id: quotation.company_id, is_deleted: 0 } });
     if (!company) throw createHttpError('Company not found for this quotation', 404);
@@ -358,9 +431,16 @@ class SendgridEmailSendService {
     }
 
     try {
+      const emailContent = buildDocumentEmailContent({
+        customerName: customer.name,
+        vehicle,
+        companyName: company.name,
+        documentType: 'quotation',
+      });
       const result = await this.sendEmail({
         companyId: quotation.company_id, customerId: customer.id,
-        message: 'Your quotation is ready. Please review the attached document.',
+        message: emailContent.text,
+        htmlContent: emailContent.html,
         subject: 'Quotation Ready', fromEmail: setting.email,
         attachment: {
           content: pdfBuffer.toString('base64'),
@@ -380,6 +460,78 @@ class SendgridEmailSendService {
       throw createHttpError('Unable to send quotation email', 502);
     }
     }
+
+  async sendCarReadyEmail({ taskCardId }) {
+    if (!taskCardId) throw createHttpError('task_card_id is required', 400);
+
+    const taskCard = await taskCardService.getTaskCardById(taskCardId);
+    if (!taskCard) throw createHttpError('Task card not found', 404);
+
+    const tasks = taskCard.tasks ?? [];
+    const isComplete = tasks.length > 0 && tasks.every((task) =>
+      ['completed', 'compeleted'].includes(String(task.task_status ?? '').trim().toLowerCase()),
+    );
+    if (!isComplete) throw createHttpError('Task card must be complete before sending a car-ready email', 400);
+
+    const vehicle = taskCard.quotation?.vehicle;
+    if (!vehicle || vehicle.is_deleted) throw createHttpError('Vehicle not found for this task card', 404);
+
+    const customer = vehicle.customer;
+    if (!customer || customer.is_deleted) throw createHttpError('Customer not found for this vehicle', 404);
+    if (!customer.email) throw createHttpError('Customer does not have an email address', 400);
+
+    const vin = vehicle.vin ?? vehicle.VIN;
+    if (!vin) throw createHttpError('Vehicle VIN is required to send a car-ready email', 400);
+
+    const company = await Company.findOne({ where: { id: taskCard.company_id, is_deleted: 0 } });
+    const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (character) => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+    })[character]);
+    const customerName = customer.name || 'Customer';
+    const companyName = company?.name || 'Your Auto Body Shop';
+    const make = vehicle.make || '—';
+    const model = vehicle.model || '—';
+    const year = vehicle.year ? String(vehicle.year) : '—';
+    const message = `Dear ${customerName},\n\nWe are pleased to inform you that your vehicle has been fully repaired and is now ready for collection.\n\nVehicle Details:\n- Make: ${make}\n- Model: ${model}\n- Year: ${year}\n- VIN: ${vin}\n\nPlease collect your vehicle at your earliest convenience.\n\nThank you for choosing our services. We appreciate your trust in us and look forward to serving you again.\n\nBest regards,\n${companyName}`;
+    const htmlContent = `<p>Dear ${escapeHtml(customerName)},</p>
+      <p>We are pleased to inform you that your vehicle has been fully repaired and is now ready for collection.</p>
+      <p><strong>Vehicle Details:</strong></p>
+      <ul>
+        <li><strong>Make:</strong> ${escapeHtml(make)}</li>
+        <li><strong>Model:</strong> ${escapeHtml(model)}</li>
+        <li><strong>Year:</strong> ${escapeHtml(year)}</li>
+        <li><strong>VIN:</strong> ${escapeHtml(vin)}</li>
+      </ul>
+      <p>Please collect your vehicle at your earliest convenience.</p>
+      <p>Thank you for choosing our services. We appreciate your trust in us and look forward to serving you again.</p>
+      <p>Best regards,<br>${escapeHtml(companyName)}</p>`;
+
+    const companyId = taskCard.company_id;
+    const setting = await SendgridSetting.findOne({ where: { company_id: companyId, is_deleted: 0 } });
+    if (!setting || !setting.sendgrid_api_key || !setting.email) {
+      throw createHttpError('Resend API key or sender email is missing from this company\'s email settings', 400);
+    }
+
+    const result = await this.sendEmail({
+      companyId,
+      customerId: customer.id,
+      subject: 'Your Vehicle Is Ready for Collection',
+      message,
+      htmlContent,
+      fromEmail: setting.email,
+    });
+
+    await db.Notification.create({
+      company_id: companyId,
+      user_id: customer.id,
+      scope: 'customer',
+      text: `Your vehicle VIN: ${vin} is ready, please collect your vehicle at your earliest convenience.`,
+      read: 0,
+    });
+
+    await this.createEmailCommunicationLog({ companyId, userId: taskCard.created_by });
+    return result;
+  }
 
 
 }

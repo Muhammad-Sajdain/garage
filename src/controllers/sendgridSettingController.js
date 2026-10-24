@@ -8,7 +8,7 @@ const createSetting = async (req, res) => {
     res.status(201).json(setting);
   } catch (err) {
     console.error('Create SendGrid setting error:', err);
-    res.status(400).json({ error: err.message });
+    res.status(err.status || 400).json({ error: err.message });
   }
 };
 
@@ -42,7 +42,7 @@ const updateSetting = async (req, res) => {
     res.json(setting);
   } catch (err) {
     console.error('Update SendGrid setting error:', err);
-    res.status(400).json({ error: err.message });
+    res.status(err.status || 400).json({ error: err.message });
   }
 };
 

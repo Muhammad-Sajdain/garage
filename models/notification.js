@@ -4,6 +4,7 @@ module.exports = (sequelize, DataTypes) => {
   const Notification = sequelize.define('Notification', {
     company_id: { type: DataTypes.INTEGER, allowNull: false },
     user_id: { type: DataTypes.INTEGER, allowNull: false },
+    scope: { type: DataTypes.ENUM('system', 'customer'), allowNull: false, defaultValue: 'system' },
     text: { type: DataTypes.TEXT, allowNull: false },
     read: { type: DataTypes.TINYINT, allowNull: false, defaultValue: 0 },
   }, { tableName: 'notifications', timestamps: true });

@@ -5,6 +5,7 @@ const router = express.Router();
 
 router.get('/', controller.listNotifications);
 router.post('/', controller.createNotification);
+router.put('/read-all', controller.markAllNotificationsRead);
 router.get('/:id', controller.getNotification);
 router.put('/:id', controller.updateNotification);
 router.delete('/:id', controller.deleteNotification);

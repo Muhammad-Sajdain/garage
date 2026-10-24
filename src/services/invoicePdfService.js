@@ -1,6 +1,9 @@
 // Uses the same jsPDF/jspdf-autotable template as the Invoice Listing download.
 const { jsPDF } = require('jspdf');
 const autoTable = require('jspdf-autotable').default;
+const sharp = require('sharp');
+const fs = require('fs');
+const path = require('path');
 
 const PDF_MARGIN = 40;
 const BRAND_COLOR = [37, 99, 235];
@@ -17,14 +20,29 @@ const createLogoFallback = (companyName) => companyName.split(' ').filter(Boolea
 
 const resolveImageDataUrl = async (src) => {
   if (!src || typeof src !== 'string') return undefined;
-  if (src.startsWith('data:')) return src;
-  if (!/^https?:\/\//i.test(src)) return undefined;
   try {
-    const response = await fetch(src);
-    if (!response.ok) return undefined;
-    const contentType = response.headers.get('content-type') || 'image/png';
-    const image = Buffer.from(await response.arrayBuffer()).toString('base64');
-    return `data:${contentType};base64,${image}`;
+    let imageBuffer;
+    if (src.startsWith('data:')) {
+      const encoded = src.match(/^data:image\/[^;,]+;base64,(.+)$/i)?.[1];
+      if (!encoded) return undefined;
+      imageBuffer = Buffer.from(encoded, 'base64');
+    } else {
+      const logoFilename = /^https?:\/\//i.test(src)
+        ? path.basename(new URL(src).pathname)
+        : path.basename(src);
+      const localLogoPath = path.join(__dirname, '../../uploads/company_logo', logoFilename);
+      if (logoFilename && fs.existsSync(localLogoPath)) {
+        imageBuffer = fs.readFileSync(localLogoPath);
+      } else if (/^https?:\/\//i.test(src)) {
+        const response = await fetch(src);
+        if (!response.ok) return undefined;
+        imageBuffer = Buffer.from(await response.arrayBuffer());
+      } else {
+        return undefined;
+      }
+    }
+    const pngBuffer = await sharp(imageBuffer).png().toBuffer();
+    return `data:image/png;base64,${pngBuffer.toString('base64')}`;
   } catch {
     return undefined;
   }

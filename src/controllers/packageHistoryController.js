@@ -2,7 +2,7 @@ const packageHistoryService = require('../services/packageHistoryService');
 
 const getPackageHistories = async (req, res) => {
   try {
-    const packageHistories = await packageHistoryService.listPackageHistories();
+    const packageHistories = await packageHistoryService.listPackageHistories(req.query.company_id);
     res.json({ success: true, data: packageHistories });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

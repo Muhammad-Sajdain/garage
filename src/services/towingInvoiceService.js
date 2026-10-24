@@ -60,10 +60,11 @@ const getTowingInvoiceById = async (id) => withPaymentBalances(await TowingInvoi
   include: towingInvoiceIncludes,
 }));
 
-const listTowingInvoices = async ({ company_id, vehicle_id, invoice_status, payment_status, status } = {}) => {
+const listTowingInvoices = async ({ company_id, vehicle_id, customer_id, invoice_status, payment_status, status } = {}) => {
   const where = { is_deleted: 0 };
   if (company_id !== undefined) where.company_id = company_id;
   if (vehicle_id !== undefined) where.vehicle_id = vehicle_id;
+  if (customer_id !== undefined) where['$vehicle.customer_id$'] = Number(customer_id);
   if (invoice_status !== undefined) where.invoice_status = invoice_status;
   if (payment_status !== undefined) where.payment_status = payment_status;
   if (status !== undefined) where.status = status;

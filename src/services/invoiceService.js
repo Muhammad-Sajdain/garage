@@ -3,7 +3,7 @@ const db = require('../../models');
 const { Invoice, InvoiceDetail, InvoicePayment, TaskCard, Quotation, Vehicle, Customer, Sequelize } = db;
 
 const invoiceIncludes = [
-  { model: InvoiceDetail, as: 'details' },
+  { model: InvoiceDetail, as: 'details', where: { is_deleted: 0 }, required: false },
   {
     model: TaskCard,
     as: 'taskCard',
@@ -19,9 +19,12 @@ const invoiceIncludes = [
   },
 ];
 
-const normalizeInvoiceFilters = ({ task_id, ...filters } = {}) => (
-  task_id === undefined ? filters : { ...filters, task_card_id: task_id }
-);
+const normalizeInvoiceFilters = ({ task_id, customer_id, vehicle_id, page, limit, search, dateField, startDate, endDate, ...filters } = {}) => ({
+  ...filters,
+  ...(task_id !== undefined ? { task_card_id: task_id } : {}),
+  ...(customer_id !== undefined ? { '$taskCard.quotation.vehicle.customer_id$': Number(customer_id) } : {}),
+  ...(vehicle_id !== undefined ? { '$taskCard.quotation.vehicle_id$': Number(vehicle_id) } : {}),
+});
 
 // Helper to fetch invoice with details
 const getInvoiceById = async (id) => {
@@ -109,24 +112,31 @@ const updateInvoice = async (id, payload) => {
   const invoice = await Invoice.findOne({ where: { id, is_deleted: 0 } });
   if (!invoice) throw new Error('Invoice not found');
 
-  const { company_id, task_card_id, task_id, details = [], ...updatable } = payload;
+  const hasDetails = Object.prototype.hasOwnProperty.call(payload, 'details');
+  const { company_id, task_card_id, task_id, details, ...updatable } = payload;
   await invoice.update(updatable);
 
   // Sync details
-  if (Array.isArray(details)) {
+  if (hasDetails && Array.isArray(details)) {
     const existing = await InvoiceDetail.findAll({ where: { invoice_id: id, is_deleted: 0 } });
-    const existingIds = existing.map(d => d.id);
-    const payloadIds = details.filter(d => d.id).map(d => d.id);
+    const existingById = new Map(existing.map(detail => [String(detail.id), detail.id]));
+    const existingIds = existing.map(detail => detail.id);
+    const payloadIds = new Set(details.filter(detail => detail.id !== undefined && detail.id !== null).map(detail => String(detail.id)));
     // Soft‑delete missing
-    const toDelete = existingIds.filter(eid => !payloadIds.includes(eid));
-    if (toDelete.length) await InvoiceDetail.update({ is_deleted: 1 }, { where: { id: toDelete } });
+    const toDelete = existingIds.filter(existingId => !payloadIds.has(String(existingId)));
+    if (toDelete.length) await InvoiceDetail.update({ is_deleted: 1 }, { where: { id: toDelete, invoice_id: id } });
     // Upsert each detail
     for (const d of details) {
       const { id: detailId, ...rest } = d;
-      if (detailId) {
-        await InvoiceDetail.update(rest, { where: { id: detailId } });
+      const matchedId = detailId != null ? existingById.get(String(detailId)) : undefined;
+      if (matchedId !== undefined) {
+        await InvoiceDetail.update(rest, { where: { id: matchedId, invoice_id: id } });
       } else {
-        await InvoiceDetail.create({ ...rest, invoice_id: id });
+        await InvoiceDetail.create({
+          ...rest,
+          invoice_id: id,
+          created_by: rest.created_by ?? payload.created_by ?? invoice.created_by,
+        });
       }
     }
   }

@@ -32,8 +32,8 @@ const sendEmail = async (req, res) => {
       data: result,
     });
   } catch (err) {
-    console.error('SendGrid email sending error:', err);
-    return res.status(400).json({
+    console.error('Resend email sending error:', err);
+    return res.status(err.status || 400).json({
       success: false,
       error: err.message,
     });
@@ -90,9 +90,29 @@ const sendQuotationEmail = async (req, res) => {
   }
 };
 
+// POST /email/car-ready
+// Body: { task_card_id: number }
+const sendCarReadyEmail = async (req, res) => {
+  try {
+    const taskCardId = req.body.task_card_id || req.body.taskCardId;
+    const result = await sendgridEmailSendService.sendCarReadyEmail({
+      taskCardId: taskCardId ? parseInt(taskCardId, 10) : undefined,
+    });
+    return res.status(200).json({
+      success: true,
+      message: 'Car-ready email sent to the customer.',
+      data: result,
+    });
+  } catch (err) {
+    console.error('Car-ready email sending error:', err.message);
+    return res.status(err.status || 400).json({ success: false, error: err.message });
+  }
+};
+
 module.exports = {
   sendEmail,
   sendInvoiceEmail,
   sendTowingInvoiceEmail,
   sendQuotationEmail,
+  sendCarReadyEmail,
 };

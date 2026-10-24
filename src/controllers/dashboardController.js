@@ -2,6 +2,95 @@
 const db = require('../../models');
 const { Op } = require('sequelize');
 
+const getCustomerDashboardMetrics = async (company_id, customerId, createdBetween) => {
+  const customer_id = Number(customerId);
+  if (!Number.isInteger(customer_id) || customer_id <= 0) {
+    const error = new Error('customer_id must be a valid positive integer');
+    error.status = 400;
+    throw error;
+  }
+
+  const customer = await db.Customer.findOne({ where: { id: customer_id, company_id, is_deleted: 0 }, attributes: ['id'] });
+  if (!customer) {
+    const error = new Error('Customer not found for this company');
+    error.status = 404;
+    throw error;
+  }
+
+  const vehicles = await db.Vehicle.findAll({ where: { customer_id, is_deleted: 0 }, attributes: ['id', 'vin'] });
+  const vehicleIds = vehicles.map((vehicle) => vehicle.id);
+  const vins = vehicles.map((vehicle) => vehicle.vin).filter(Boolean);
+  const vehicleScope = { [Op.in]: vehicleIds.length ? vehicleIds : [-1] };
+  const quotations = vehicleIds.length
+    ? await db.Quotation.findAll({ where: { company_id, vehicle_id: vehicleScope, is_deleted: 0 }, attributes: ['id'] })
+    : [];
+  const quotationIds = quotations.map((quotation) => quotation.id);
+  const quotationScope = { [Op.in]: quotationIds.length ? quotationIds : [-1] };
+  const taskCards = quotationIds.length
+    ? await db.TaskCard.findAll({ where: { company_id, quotation_id: quotationScope, is_deleted: 0, ...createdBetween }, attributes: ['id'] })
+    : [];
+  const taskCardIds = taskCards.map((taskCard) => taskCard.id);
+  const taskCardScope = { [Op.in]: taskCardIds.length ? taskCardIds : [-1] };
+
+  const [pendingQuotations, serviceInvoices, towingInvoices, appointments] = await Promise.all([
+    quotationIds.length
+      ? db.Quotation.count({ where: { company_id, vehicle_id: vehicleScope, is_deleted: 0, quotation_status: { [Op.in]: ['draft', 'pending'] }, ...createdBetween } })
+      : 0,
+    taskCardIds.length
+      ? db.Invoice.findAll({ where: { company_id, task_card_id: taskCardScope, is_deleted: 0, ...createdBetween }, attributes: ['id', 'invoice_status'] })
+      : [],
+    vehicleIds.length
+      ? db.TowingInvoice.findAll({ where: { company_id, vehicle_id: vehicleScope, is_deleted: 0, ...createdBetween }, attributes: ['id', 'invoice_status'] })
+      : [],
+    vins.length
+      ? db.Appointment.count({ where: { company_id, VIN: { [Op.in]: vins }, is_deleted: 0, ...createdBetween } })
+      : 0,
+  ]);
+
+  const serviceInvoiceIds = serviceInvoices.map((invoice) => invoice.id);
+  const towingInvoiceIds = towingInvoices.map((invoice) => invoice.id);
+  const [serviceRevenue, towingRevenue, pendingServicePayments, pendingTowingPayments, taskCounts] = await Promise.all([
+    serviceInvoiceIds.length
+      ? db.Sales.sum('amount', { where: { company_id, invoice_type: 'Service', invoice_id: { [Op.in]: serviceInvoiceIds }, is_deleted: 0, ...createdBetween } })
+      : 0,
+    towingInvoiceIds.length
+      ? db.Sales.sum('amount', { where: { company_id, invoice_type: 'Towing Service', invoice_id: { [Op.in]: towingInvoiceIds }, is_deleted: 0, ...createdBetween } })
+      : 0,
+    serviceInvoiceIds.length
+      ? db.InvoicePayment.count({ where: { company_id, invoice_type: 'Service', invoice_id: { [Op.in]: serviceInvoiceIds }, is_deleted: 0, payment_status: { [Op.in]: ['pending', 'not_verified'] }, ...createdBetween } })
+      : 0,
+    towingInvoiceIds.length
+      ? db.InvoicePayment.count({ where: { company_id, invoice_type: 'Towing Service', invoice_id: { [Op.in]: towingInvoiceIds }, is_deleted: 0, payment_status: { [Op.in]: ['pending', 'not_verified'] }, ...createdBetween } })
+      : 0,
+    taskCardIds.length
+      ? Promise.all([
+          db.Task.count({ where: { task_card_id: taskCardScope, is_deleted: 0 } }),
+          db.Task.count({ where: { task_card_id: taskCardScope, is_deleted: 0, task_status: 'pending' } }),
+          db.Task.count({ where: { task_card_id: taskCardScope, is_deleted: 0, task_status: { [Op.in]: ['compeleted', 'completed'] } } }),
+          db.Task.count({ where: { task_card_id: taskCardScope, is_deleted: 0, task_status: { [Op.in]: ['Inprogress', 'inprogress', 'in-progress', 'in progress'] } } }),
+        ])
+      : [0, 0, 0, 0],
+  ]);
+
+  const [totalTasks, totalPendingTasks, totalCompletedTasks, totalInProgressTasks] = taskCounts;
+  return {
+    totalRevenue: Number(serviceRevenue || 0) + Number(towingRevenue || 0),
+    totalPendingInvoices: serviceInvoices.filter((invoice) => invoice.invoice_status === 'pending').length
+      + towingInvoices.filter((invoice) => invoice.invoice_status === 'pending').length,
+    totalPendingQuotations: Number(pendingQuotations || 0),
+    totalPendingPayments: Number(pendingServicePayments || 0) + Number(pendingTowingPayments || 0),
+    totalEmployees: 0,
+    totalCustomers: 1,
+    totalVehicles: vehicles.length,
+    totalAppointments: Number(appointments || 0),
+    totalTaskCards: taskCards.length,
+    totalTasks: Number(totalTasks || 0),
+    totalPendingTasks: Number(totalPendingTasks || 0),
+    totalCompletedTasks: Number(totalCompletedTasks || 0),
+    totalInProgressTasks: Number(totalInProgressTasks || 0),
+  };
+};
+
 const getCompanyDashboardStats = async (req, res) => {
   try {
     const companyId = req.query.company_id || req.body.company_id;
@@ -11,6 +100,11 @@ const getCompanyDashboardStats = async (req, res) => {
     const startDate = req.query.startDate ? new Date(`${req.query.startDate}T00:00:00`) : null;
     const endDate = req.query.endDate ? new Date(`${req.query.endDate}T23:59:59.999`) : null;
     const createdBetween = startDate && endDate ? { createdAt: { [Op.between]: [startDate, endDate] } } : {};
+
+    if (req.query.customer_id) {
+      const data = await getCustomerDashboardMetrics(company_id, req.query.customer_id, createdBetween);
+      return res.json({ success: true, data });
+    }
 
     const [
       revenue,
@@ -97,7 +191,7 @@ const getCompanyDashboardStats = async (req, res) => {
     });
   } catch (err) {
     console.error('Dashboard stats error:', err);
-    return res.status(500).json({ success: false, message: err.message });
+    return res.status(err.status || 500).json({ success: false, message: err.message });
   }
 };
 
@@ -151,6 +245,24 @@ const getCompanyTasksDoughnut = async (req, res) => {
     const endDate = req.query.endDate ? new Date(`${req.query.endDate}T23:59:59.999`) : null;
     const createdBetween = startDate && endDate ? { createdAt: { [Op.between]: [startDate, endDate] } } : {};
 
+    if (req.query.customer_id) {
+      const metrics = await getCustomerDashboardMetrics(company_id, req.query.customer_id, createdBetween);
+      return res.json({
+        success: true,
+        data: {
+          totalTaskCards: metrics.totalTaskCards,
+          totalTasks: metrics.totalTasks,
+          totalPendingTasks: metrics.totalPendingTasks,
+          totalCompletedTasks: metrics.totalCompletedTasks,
+          totalInProgressTasks: metrics.totalInProgressTasks,
+          doughnut: {
+            labels: ['Pending', 'In Progress', 'Completed'],
+            values: [metrics.totalPendingTasks, metrics.totalInProgressTasks, metrics.totalCompletedTasks],
+          },
+        },
+      });
+    }
+
     // Total Task Cards for the company
     const totalTaskCards = await db.TaskCard.count({ where: { company_id, is_deleted: 0, ...createdBetween } });
 
@@ -194,7 +306,7 @@ const getCompanyTasksDoughnut = async (req, res) => {
     });
   } catch (err) {
     console.error('Tasks doughnut error:', err);
-    return res.status(500).json({ success: false, message: err.message });
+    return res.status(err.status || 500).json({ success: false, message: err.message });
   }
 };
 

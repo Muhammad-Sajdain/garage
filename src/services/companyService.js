@@ -7,6 +7,56 @@ const Company = db.Company;
 const CompanyUser = db.CompanyUser;
 const Users = db.Users;
 const CompanyAccount = db.CompanyAccount;
+const Role = db.Role;
+const RolePermission = db.RolePermission;
+
+const OWNER_ROLE_PERMISSIONS = {
+  3: { view: true, create: true, update: true, deactivate: true, delete: true },
+  4: { view: true, create: true, update: true, deactivate: true, delete: true },
+  5: { view: true, create: false, update: false, deactivate: false, delete: false },
+  16: { view: true, create: false, update: true, deactivate: false, delete: false },
+  17: { view: true, create: false, update: true, deactivate: false, delete: false },
+  18: { view: true, create: false, update: false, deactivate: false, delete: false },
+  19: { view: true, create: false, update: false, deactivate: false, delete: false },
+  20: { view: true, create: true, update: false, deactivate: false, delete: false },
+  21: { view: true, create: true, update: true, deactivate: true, delete: true },
+  22: { view: true, create: true, update: true, deactivate: true, delete: true },
+  23: { view: true, create: true, update: true, deactivate: true, delete: true },
+  24: { view: true, create: true, update: true, deactivate: true, delete: true },
+  25: { view: true, create: true, update: true, deactivate: false, delete: true },
+  26: { view: true, create: true, update: true, deactivate: true, delete: true },
+  27: { view: true, create: false, update: false, deactivate: false, delete: false },
+  28: { view: true, create: false, update: false, deactivate: false, delete: false },
+  29: { view: true, create: true, update: true, deactivate: true, delete: true },
+  30: { view: true, create: false, update: true, deactivate: false, delete: false },
+  31: { view: true, create: true, update: true, deactivate: true, delete: true },
+  32: { view: true, create: true, update: true, deactivate: true, delete: true },
+  33: { view: true, create: true, update: true, deactivate: true, delete: true },
+  34: { view: true, create: true, update: true, deactivate: true, delete: true },
+};
+
+const CUSTOMER_ROLE_PERMISSIONS = {
+  1: { view: true, create: true, update: true, deactivate: true, delete: true },
+  5: { view: false, create: false, update: false, deactivate: false, delete: false },
+  16: { view: true, create: false, update: false, deactivate: false, delete: false },
+  17: { view: true, create: false, update: false, deactivate: false, delete: false },
+  18: { view: false, create: false, update: false, deactivate: false, delete: false },
+  19: { view: false, create: false, update: false, deactivate: false, delete: false },
+  20: { view: false, create: false, update: false, deactivate: false, delete: false },
+  21: { view: true, create: false, update: false, deactivate: false, delete: false },
+  22: { view: true, create: false, update: false, deactivate: false, delete: false },
+  23: { view: true, create: false, update: false, deactivate: false, delete: false },
+  24: { view: true, create: false, update: false, deactivate: false, delete: false },
+  25: { view: true, create: false, update: false, deactivate: false, delete: false },
+  26: { view: true, create: false, update: false, deactivate: false, delete: false },
+  27: { view: true, create: false, update: false, deactivate: false, delete: false },
+  28: { view: false, create: false, update: false, deactivate: false, delete: false },
+  30: { view: true, create: false, update: false, deactivate: false, delete: false },
+  31: { view: true, create: true, update: false, deactivate: false, delete: false },
+  32: { view: true, create: true, update: false, deactivate: false, delete: false },
+  33: { view: true, create: true, update: true, deactivate: true, delete: true },
+  34: { view: true, create: true, update: true, deactivate: true, delete: true },
+};
 
 const companyIncludes = [
   {
@@ -116,10 +166,39 @@ const createCompany = async (payload, file) => {
       is_deleted: 0,
     }, { transaction });
 
+    const ownerRole = await Role.create({
+      company_id: company.id,
+      name: 'Owner',
+      status: 1,
+      is_deleted: 0,
+    }, { transaction });
+
+    const customerRole = await Role.create({
+      company_id: company.id,
+      name: 'Customer',
+      status: 1,
+      is_deleted: 0,
+    }, { transaction });
+
+    await RolePermission.bulkCreate([
+      {
+        role_id: ownerRole.id,
+        permission: OWNER_ROLE_PERMISSIONS,
+        status: 1,
+        is_deleted: 0,
+      },
+      {
+        role_id: customerRole.id,
+        permission: CUSTOMER_ROLE_PERMISSIONS,
+        status: 1,
+        is_deleted: 0,
+      },
+    ], { transaction });
+
     await CompanyUser.create({
       user_id: owner_id,
       company_id: company.id,
-      role_id: 1,
+      role_id: ownerRole.id,
       status: 1,
       is_deleted: 0,
     }, { transaction });
@@ -160,6 +239,12 @@ const updateCompany = async (id, payload, file) => {
 
   let oldLogoFilename = company.logo;
   let newWebpFilename = null;
+  const shouldRemoveLogo = !file && (payload.logo === null || payload.remove_logo === 'true' || payload.remove_logo === true);
+
+  if (shouldRemoveLogo) {
+    payload.logo = null;
+    delete payload.remove_logo;
+  }
 
   if (file) {
     newWebpFilename = await convertToWebp(file);
@@ -172,7 +257,7 @@ const updateCompany = async (id, payload, file) => {
     await company.update(payload, { transaction });
     await transaction.commit();
 
-    if (file && oldLogoFilename) {
+    if ((file || shouldRemoveLogo) && oldLogoFilename) {
       deleteCompanyLogoFiles(oldLogoFilename);
     }
 

@@ -2,7 +2,7 @@ const customerService = require('../services/customerService');
 
 const getCustomers = async (req, res) => {
   try {
-    const customers = await customerService.listCustomers(req.query.company_id);
+    const customers = await customerService.listCustomers(req.query.company_id, req.query.customer_id);
     res.json({ success: true, data: customers });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
