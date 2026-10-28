@@ -14,6 +14,14 @@ app.use('/profile-pictures', express.static(path.join(__dirname, '../uploads/pro
 app.use('/quotation_files', express.static(path.join(__dirname, '../uploads/quotations_files')));
 app.use('/payment_proof_images', express.static(path.join(__dirname, '../uploads/payment_proof_images')));
 app.use(paginationMiddleware);
-app.use('/api', routes);
+app.use('/api', (req, res, next) => {
+  res.set({
+    'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
+    Pragma: 'no-cache',
+    Expires: '0',
+    'Surrogate-Control': 'no-store',
+  });
+  next();
+}, routes);
 
 module.exports = app;

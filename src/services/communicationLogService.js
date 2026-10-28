@@ -6,17 +6,24 @@ const validateChannel = (channel) => {
   }
 };
 
+const validateScope = (scope) => {
+  if (scope !== undefined && !['system', 'customer'].includes(scope)) {
+    throw new Error('scope must be system or customer');
+  }
+};
+
 const getCommunicationLogById = (id) => db.CommunicationLog.findOne({
   where: { id, is_deleted: 0 },
   include: [{ model: db.Company, as: 'company' }, { model: db.Users, as: 'user' }],
 });
 
-const listCommunicationLogs = ({ company_id, channel, user_id } = {}) => db.CommunicationLog.findAll({
+const listCommunicationLogs = ({ company_id, channel, user_id, scope } = {}) => db.CommunicationLog.findAll({
   where: {
     is_deleted: 0,
     ...(company_id !== undefined ? { company_id } : {}),
     ...(channel !== undefined ? { channel } : {}),
     ...(user_id !== undefined ? { user_id } : {}),
+    ...(scope !== undefined ? { scope } : {}),
   },
   include: [{ model: db.Company, as: 'company' }, { model: db.Users, as: 'user' }],
   order: [['createdAt', 'DESC']],
@@ -24,9 +31,12 @@ const listCommunicationLogs = ({ company_id, channel, user_id } = {}) => db.Comm
 
 const createCommunicationLog = async (payload) => {
   validateChannel(payload.channel);
+  validateScope(payload.scope);
   const log = await db.CommunicationLog.create({
     company_id: payload.company_id,
     channel: payload.channel,
+    text: payload.text ?? null,
+    scope: payload.scope ?? 'system',
     user_id: payload.user_id,
     status: payload.status ?? 1,
     is_deleted: 0,
@@ -38,9 +48,10 @@ const updateCommunicationLog = async (id, payload) => {
   const log = await db.CommunicationLog.findOne({ where: { id, is_deleted: 0 } });
   if (!log) throw new Error('Communication log not found');
   validateChannel(payload.channel);
+  validateScope(payload.scope);
 
   const updateData = {};
-  ['company_id', 'channel', 'user_id', 'status'].forEach((field) => {
+  ['company_id', 'channel', 'text', 'scope', 'user_id', 'status'].forEach((field) => {
     if (payload[field] !== undefined) updateData[field] = payload[field];
   });
   await log.update(updateData);

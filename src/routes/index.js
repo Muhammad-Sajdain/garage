@@ -1,5 +1,9 @@
 const express = require('express');
 const { healthCheck } = require('../controllers/healthController');
+const authController = require('../controllers/authController');
+const packageController = require('../controllers/packageController');
+const demoBookingController = require('../controllers/demoBookingController');
+const authenticateToken = require('../middleware/authenticateToken');
 const packageRoutes = require('./packageRoutes');
 const adminRoutes = require('./adminRoutes');
 const usersRoutes = require('./usersRoutes');
@@ -39,6 +43,19 @@ const packageSaleRoutes = require('./packageSaleRoutes');
 const router = express.Router();
 
 router.get('/health', healthCheck);
+
+// Public routes required before a user has an access token.
+router.post('/auth/admin/login', authController.loginAdmin);
+router.post('/auth/user/login', authController.loginUser);
+router.post('/auth/customer/login', authController.loginCustomer);
+router.post('/users/login', authController.loginUser);
+router.post('/admins/login', authController.loginAdmin);
+router.get('/packages', packageController.getPackages);
+router.post('/demo-bookings', demoBookingController.createDemoBooking);
+
+// All remaining API routes require a valid bearer token.
+router.use(authenticateToken);
+
 router.use('/auth', authRoutes);
 router.use('/packages', packageRoutes);
 router.use('/admins', adminRoutes);

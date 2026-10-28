@@ -23,7 +23,7 @@ const resetCompanyUserPassword = async (id) => {
     attributes: ['id', 'name', 'email'],
   });
   try {
-    await userWelcomeEmailService.sendPasswordResetEmail({ user });
+    await userWelcomeEmailService.sendPasswordResetEmail({ user, companyId: companyUser.company_id });
   } catch (error) {
     console.error('Company employee password reset email failed:', error.message);
   }
@@ -172,7 +172,7 @@ const createCompanyUser = async (payload, file) => {
     const result = await getCompanyUserById(companyUser.id);
     if (createdUser) {
       try {
-        await userWelcomeEmailService.sendAccountCreatedEmail({ user: createdUser });
+        await userWelcomeEmailService.sendAccountCreatedEmail({ user: createdUser, companyId: company_id });
       } catch (error) {
         console.error('Company employee welcome email failed:', error.message);
       }

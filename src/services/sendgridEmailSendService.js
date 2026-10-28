@@ -56,7 +56,7 @@ const buildDocumentEmailContent = ({ customerName, vehicle, companyName, documen
 };
 
 class SendgridEmailSendService {
-  async createEmailCommunicationLog({ companyId, userId }) {
+  async createEmailCommunicationLog({ companyId, userId, text, scope = 'customer' }) {
     if (!userId) {
       throw createHttpError('Unable to create email communication log: document creator is missing', 500);
     }
@@ -65,6 +65,8 @@ class SendgridEmailSendService {
       company_id: companyId,
       user_id: userId,
       channel: 'Email',
+      text,
+      scope,
       status: 1,
     });
   }
@@ -334,6 +336,8 @@ class SendgridEmailSendService {
       await this.createEmailCommunicationLog({
         companyId: invoice.company_id,
         userId: invoice.created_by,
+        text: 'Invoice Ready',
+        scope: 'customer',
       });
 
       return result;
@@ -385,7 +389,7 @@ class SendgridEmailSendService {
       companyId: invoice.company_id, customerId: customer.id, message: emailContent.text, htmlContent: emailContent.html, subject: 'Towing Invoice Ready', fromEmail: setting.email,
       attachment: { content: pdfBuffer.toString('base64'), filename: `Towing-Invoice-${invoice.invoice_number ?? invoice.id}.pdf`, type: 'application/pdf' },
     });
-    await this.createEmailCommunicationLog({ companyId: invoice.company_id, userId: invoice.created_by });
+    await this.createEmailCommunicationLog({ companyId: invoice.company_id, userId: invoice.created_by, text: 'Towing Invoice Ready', scope: 'customer' });
     return result;
   }
 
@@ -452,6 +456,8 @@ class SendgridEmailSendService {
       await this.createEmailCommunicationLog({
         companyId: quotation.company_id,
         userId: quotation.created_by,
+        text: 'Quotation Ready',
+        scope: 'customer',
       });
 
       return result;
@@ -529,7 +535,7 @@ class SendgridEmailSendService {
       read: 0,
     });
 
-    await this.createEmailCommunicationLog({ companyId, userId: taskCard.created_by });
+    await this.createEmailCommunicationLog({ companyId, userId: taskCard.created_by, text: 'Your Vehicle Is Ready for Collection', scope: 'customer' });
     return result;
   }
 

@@ -26,6 +26,17 @@ const sendEmail = async (req, res) => {
       reqFile,
     });
 
+    try {
+      await sendgridEmailSendService.createEmailCommunicationLog({
+        companyId: companyId ? parseInt(companyId, 10) : undefined,
+        userId: req.auth?.sub,
+        text: subject || 'Notification from Garage',
+        scope: 'customer',
+      });
+    } catch (logError) {
+      console.error('Email sent, but customer communication log could not be created:', logError.message);
+    }
+
     return res.status(200).json({
       success: true,
       message: result.message,

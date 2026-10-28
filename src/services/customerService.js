@@ -157,7 +157,7 @@ const deleteCustomer = async (id) => {
   return { success: true, message: 'Customer deleted successfully' };
 };
 
-const resetCustomerPassword = async (id) => {
+const resetCustomerPassword = async (id, userId) => {
   const customer = await Customer.findOne({
     where: { id, is_deleted: 0 },
   });
@@ -169,7 +169,7 @@ const resetCustomerPassword = async (id) => {
   const hashedPassword = await bcrypt.hash(DEFAULT_CUSTOMER_PASSWORD, 10);
   await customer.update({ password: hashedPassword });
   try {
-    await customerWelcomeEmailService.sendPasswordResetEmail({ customer });
+    await customerWelcomeEmailService.sendPasswordResetEmail({ customer, userId });
   } catch (error) {
     console.error('Customer password reset email failed:', error.message);
   }

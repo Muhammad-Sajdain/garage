@@ -23,7 +23,7 @@ const getCustomer = async (req, res) => {
 
 const createCustomer = async (req, res) => {
   try {
-    const customer = await customerService.createCustomer(req.body);
+    const customer = await customerService.createCustomer({ ...req.body, created_by: req.auth?.sub ?? req.body.created_by });
     res.status(201).json({ success: true, data: customer });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
@@ -56,7 +56,7 @@ const deleteCustomer = async (req, res) => {
 
 const resetCustomerPassword = async (req, res) => {
   try {
-    const result = await customerService.resetCustomerPassword(req.params.id);
+    const result = await customerService.resetCustomerPassword(req.params.id, req.auth?.sub);
     res.json(result);
   } catch (error) {
     if (error.message === 'Customer not found') {
