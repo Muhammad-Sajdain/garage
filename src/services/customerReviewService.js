@@ -32,7 +32,7 @@ const listReviews = async (query = {}) => {
   const { count, rows } = await CustomerReview.findAndCountAll({
     where,
     include: [{ model: TaskCard, as: 'taskCard' }],
-    order: [['id', 'ASC']],
+    order: [['id', 'DESC']],
     limit,
     offset: (page - 1) * limit,
   });

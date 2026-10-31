@@ -45,7 +45,7 @@ const listPackageHistories = async (companyId) => {
       as: 'company',
       attributes: ['id', 'name'],
     }],
-    order: [['id', 'ASC']],
+    order: [['id', 'DESC']],
   });
 };
 
@@ -64,10 +64,14 @@ const createPackageHistory = async (payload) => {
     payment_status = 'Pending',
     package_type = 'Monthly',
     amount = 0.00,
-    status = 1,
   } = payload;
 
   return db.sequelize.transaction(async (transaction) => {
+    await PackageHistory.update(
+      { status: 0 },
+      { where: { company_id, is_deleted: 0 }, transaction },
+    );
+
     const packageHistory = await PackageHistory.create({
       package_id,
       company_id,
@@ -76,7 +80,7 @@ const createPackageHistory = async (payload) => {
       payment_status,
       package_type,
       amount,
-      status,
+      status: 1,
       is_deleted: 0,
     }, { transaction });
 

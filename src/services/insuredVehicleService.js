@@ -5,7 +5,7 @@ const InsuredVehicle = db.InsuredVehicle;
 const listInsuredVehicles = async () => {
   return InsuredVehicle.findAll({
     where: { is_deleted: 0 },
-    order: [['id', 'ASC']],
+    order: [['id', 'DESC']],
   });
 };
 

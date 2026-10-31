@@ -23,7 +23,7 @@ const listAppointments = async (query = {}) => {
   const { count, rows } = await Appointment.findAndCountAll({
     where,
     include: [{ model: Company, as: 'company' }],
-    order: [['id', 'ASC']],
+    order: [['id', 'DESC']],
     limit,
     offset: (page - 1) * limit,
   });

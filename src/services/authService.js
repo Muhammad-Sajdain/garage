@@ -9,6 +9,7 @@ const Role = db.Role;
 const RolePermission = db.RolePermission;
 const Customer = db.Customer;
 const PackageHistory = db.PackageHistory;
+const Package = db.Package;
 const profilePictureService = require('./profilePictureService');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'garage-secret-key';
@@ -143,6 +144,12 @@ const loginUser = async (payload) => {
 
   const { role, permissions } = await getCompanyRoleAccess(roleId, companyId);
   const roleName = role?.name ?? null;
+  const activePackage = await Package.findOne({
+    where: { id: latestPackageHistory.package_id, is_deleted: 0 },
+    attributes: ['id', 'name'],
+  });
+  const packageId = latestPackageHistory.package_id;
+  const packageName = activePackage?.name ?? null;
 
   const token = createToken({
     sub: user.id,
@@ -160,6 +167,9 @@ const loginUser = async (payload) => {
     role: roleName,
     role_name: roleName,
     company_id: companyId,
+    companyId,
+    PackageId: packageId,
+    PackageName: packageName,
     role_id: roleId,
     permissions,
     user: {
@@ -175,6 +185,9 @@ const loginUser = async (payload) => {
       role_name: roleName,
       role_id: roleId,
       permissions,
+      companyId,
+      PackageId: packageId,
+      PackageName: packageName,
     },
   };
 };

@@ -31,6 +31,7 @@ const sendEmail = async (req, res) => {
         companyId: companyId ? parseInt(companyId, 10) : undefined,
         userId: req.auth?.sub,
         text: subject || 'Notification from Garage',
+        sendTo: result.to,
         scope: 'customer',
       });
     } catch (logError) {

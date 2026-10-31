@@ -6,7 +6,7 @@ const Admin = db.Admin;
 const listAdmins = async () => {
   return Admin.findAll({
     where: { is_deleted: 0 },
-    order: [['id', 'ASC']],
+    order: [['id', 'DESC']],
   });
 };
 

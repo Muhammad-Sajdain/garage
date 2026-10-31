@@ -8,7 +8,7 @@ const getCompanyAccountById = (id) => db.CompanyAccount.findOne({
 const listCompanyAccounts = ({ company_id } = {}) => db.CompanyAccount.findAll({
   where: { is_deleted: 0, ...(company_id !== undefined ? { company_id } : {}) },
   include: [{ model: db.Company, as: 'company' }],
-  order: [['id', 'ASC']],
+  order: [['id', 'DESC']],
 });
 
 const createCompanyAccount = async (payload) => {

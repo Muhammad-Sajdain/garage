@@ -54,7 +54,7 @@ const listCompanyUsers = async (company_id) => {
         required: false,
       },
     ],
-    order: [['id', 'ASC']],
+    order: [['id', 'DESC']],
   });
 };
 

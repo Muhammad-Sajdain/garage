@@ -9,7 +9,7 @@ const DEFAULT_USER_PASSWORD = 'garage@123';
 const listUsers = async () => {
   return Users.findAll({
     where: { is_deleted: 0 },
-    order: [['id', 'ASC']],
+    order: [['id', 'DESC']],
   });
 };
 

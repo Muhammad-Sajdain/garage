@@ -23,7 +23,7 @@ const moduleInclude = {
 const listModules = () => Module.findAll({
   where: { is_deleted: 0 },
   include: [moduleInclude],
-  order: [['id', 'ASC'], [{ model: SubModule, as: 'subModules' }, 'id', 'ASC']],
+  order: [['id', 'DESC'], [{ model: SubModule, as: 'subModules' }, 'id', 'DESC']],
 });
 
 const getModuleById = (id, options = {}) => Module.findOne({

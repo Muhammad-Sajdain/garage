@@ -16,7 +16,7 @@ const listRoles = async (companyId) => {
 
   return Role.findAll({
     where: { is_deleted: 0, company_id: normalizedCompanyId },
-    order: [['id', 'ASC']],
+    order: [['id', 'DESC']],
   });
 };
 

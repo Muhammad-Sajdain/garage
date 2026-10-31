@@ -26,7 +26,7 @@ const listQuotations = async (filters = {}) => {
   return Quotation.findAll({
     where,
     include: quotationIncludes,
-    order: [['id', 'ASC']],
+    order: [['id', 'DESC']],
   });
 };
 
@@ -50,7 +50,7 @@ const createQuotation = async (payload, files = []) => {
     vehicle_id,
     mileage,
     note,
-    quotation_status = 'draft',
+    quotation_status = 'approved',
     subtotal,
     discount,
     discount_percentage,
@@ -114,11 +114,12 @@ const updateQuotation = async (id, payload, files = []) => {
   // Update main fields
   // Prevent company_id from being changed during update
   const detailsProvided = Object.prototype.hasOwnProperty.call(payload, 'details');
+  const documentsToDelete = payload.deleted_document_ids;
   if (detailsProvided && !Array.isArray(payload.details)) {
     throw new Error('Quotation details must be an array');
   }
 
-  const { company_id, details, ...updatableFields } = payload;
+  const { company_id, details, deleted_document_ids, ...updatableFields } = payload;
   await quotation.update(updatableFields);
 
   // Replace details if payload contains a 'details' array
@@ -130,6 +131,13 @@ const updateQuotation = async (id, payload, files = []) => {
       const newDetails = details.map(d => ({ ...d, quotation_id: id }));
       await QuotationDetail.bulkCreate(newDetails);
     }
+  }
+
+  if (Array.isArray(documentsToDelete) && documentsToDelete.length) {
+    await QuotationDocument.update(
+      { is_deleted: 1 },
+      { where: { id: documentsToDelete, quotation_id: id, is_deleted: 0 } },
+    );
   }
 
   // Add any new uploaded documents (keep existing ones)

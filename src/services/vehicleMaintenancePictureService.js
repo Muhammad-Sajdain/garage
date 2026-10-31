@@ -14,7 +14,7 @@ const getById = async (id) => {
 // List with optional filters (task_card_id, company_id, picture_tag, status)
 const list = async (filters = {}) => {
   const where = { is_deleted: 0, ...filters };
-  return VehicleMaintenancePicture.findAll({ where, order: [['id', 'ASC']] });
+  return VehicleMaintenancePicture.findAll({ where, order: [['id', 'DESC']] });
 };
 
 // Create – supports multiple files via multer (req.files) and matching picture_tags array

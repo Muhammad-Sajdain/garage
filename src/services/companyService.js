@@ -33,6 +33,7 @@ const OWNER_ROLE_PERMISSIONS = {
   32: { view: true, create: true, update: true, deactivate: true, delete: true },
   33: { view: true, create: true, update: true, deactivate: true, delete: true },
   34: { view: true, create: true, update: true, deactivate: true, delete: true },
+  35: { view: true, create: true, update: true, deactivate: true, delete: true },
 };
 
 const CUSTOMER_ROLE_PERMISSIONS = {
@@ -56,6 +57,7 @@ const CUSTOMER_ROLE_PERMISSIONS = {
   32: { view: true, create: true, update: false, deactivate: false, delete: false },
   33: { view: true, create: true, update: true, deactivate: true, delete: true },
   34: { view: true, create: true, update: true, deactivate: true, delete: true },
+  35: { view: true, create: false, update: false, deactivate: false, delete: false },
 };
 
 const companyIncludes = [
@@ -117,7 +119,7 @@ const listCompanies = async () => {
   return Company.findAll({
     where: { is_deleted: 0 },
     include: companyIncludes,
-    order: [['id', 'ASC']],
+    order: [['id', 'DESC']],
   });
 };
 
@@ -161,7 +163,7 @@ const createCompany = async (payload, file) => {
       state: state ?? '',
       phone,
       address,
-      registration_no,
+      registration_no: registration_no === '' || registration_no == null ? null : registration_no,
       status,
       is_deleted: 0,
     }, { transaction });
@@ -235,6 +237,10 @@ const updateCompany = async (id, payload, file) => {
       try { fs.unlinkSync(file.path); } catch (e) {}
     }
     throw new Error('Company not found');
+  }
+
+  if (Object.prototype.hasOwnProperty.call(payload, 'registration_no') && (payload.registration_no === '' || payload.registration_no == null)) {
+    payload.registration_no = null;
   }
 
   let oldLogoFilename = company.logo;

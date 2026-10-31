@@ -1,12 +1,13 @@
 const db = require('../../models');
 const communicationLogService = require('./communicationLogService');
 
-const logCustomerEmail = async ({ customer, companyId, userId, subject }) => {
+const logCustomerEmail = async ({ customer, companyId, subject }) => {
   try {
     await communicationLogService.createCommunicationLog({
       company_id: companyId ?? customer.company_id,
       channel: 'Email',
-      user_id: userId ?? customer.created_by,
+      send_to: customer.email,
+      user_id: customer.id,
       text: subject,
       scope: 'customer',
       status: 1,
@@ -104,7 +105,7 @@ const sendPasswordResetEmail = async ({ customer, userId }) => {
     const details = await response.json().catch(() => ({}));
     throw new Error(`Resend rejected customer password reset email (${response.status}): ${details.message || 'unknown error'}`);
   }
-  await logCustomerEmail({ customer, userId, subject: 'Password Reset' });
+  await logCustomerEmail({ customer, subject: 'Password Reset' });
   return response.json().catch(() => ({}));
 };
 

@@ -37,7 +37,7 @@ const getInvoiceById = async (id) => {
 // List invoices (optional filters)
 const listInvoices = async (filters = {}) => {
   const where = { is_deleted: 0, ...normalizeInvoiceFilters(filters) };
-  const invoices = await Invoice.findAll({ where, include: invoiceIncludes, order: [['id', 'ASC']] });
+  const invoices = await Invoice.findAll({ where, include: invoiceIncludes, order: [['id', 'DESC']] });
   if (!invoices.length) return [];
 
   const invoiceIds = invoices.map(invoice => invoice.id);

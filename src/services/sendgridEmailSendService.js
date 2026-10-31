@@ -56,7 +56,7 @@ const buildDocumentEmailContent = ({ customerName, vehicle, companyName, documen
 };
 
 class SendgridEmailSendService {
-  async createEmailCommunicationLog({ companyId, userId, text, scope = 'customer' }) {
+  async createEmailCommunicationLog({ companyId, userId, text, sendTo, scope = 'customer' }) {
     if (!userId) {
       throw createHttpError('Unable to create email communication log: document creator is missing', 500);
     }
@@ -66,6 +66,7 @@ class SendgridEmailSendService {
       user_id: userId,
       channel: 'Email',
       text,
+      send_to: sendTo,
       scope,
       status: 1,
     });
@@ -256,6 +257,8 @@ class SendgridEmailSendService {
     if (!customer || customer.is_deleted) throw createHttpError('Customer not found for this vehicle', 404);
     if (!customer.email) throw createHttpError('Customer does not have an email address', 400);
 
+    const emailSubject = `Your Invoice # ${invoice.invoice_number ?? `INV-${invoice.id}`} of Vehicle VIN:${vehicle.vin ?? vehicle.VIN ?? '—'} is ready`;
+
     // Use the company's configured sender address with the Resend API key.
     const setting = await SendgridSetting.findOne({
       where: { company_id: invoice.company_id, is_deleted: 0 },
@@ -324,7 +327,7 @@ class SendgridEmailSendService {
         customerId: customer.id,
         message: emailContent.text,
         htmlContent: emailContent.html,
-        subject: 'Invoice Ready',
+        subject: emailSubject,
         fromEmail: setting.email,
         attachment: {
           content: pdfBuffer.toString('base64'),
@@ -335,8 +338,9 @@ class SendgridEmailSendService {
 
       await this.createEmailCommunicationLog({
         companyId: invoice.company_id,
-        userId: invoice.created_by,
-        text: 'Invoice Ready',
+        userId: customer.id,
+        text: emailSubject,
+        sendTo: customer.email,
         scope: 'customer',
       });
 
@@ -357,6 +361,8 @@ class SendgridEmailSendService {
     const customer = vehicle?.customer;
     if (!vehicle || vehicle.is_deleted) throw createHttpError('Vehicle not found for this towing invoice', 404);
     if (!customer || customer.is_deleted || !customer.email) throw createHttpError('Customer does not have an email address', 400);
+
+    const emailSubject = `Your Towing Invoice # ${invoice.invoice_number ?? `TOW-${invoice.id}`} of Vehicle VIN:${vehicle.vin ?? vehicle.VIN ?? '—'} is ready`;
 
     const setting = await SendgridSetting.findOne({ where: { company_id: invoice.company_id, is_deleted: 0 } });
     if (!setting?.sendgrid_api_key || !setting.email) throw createHttpError('Resend API key or sender email is missing from this company\'s email settings', 400);
@@ -386,10 +392,10 @@ class SendgridEmailSendService {
       documentType: 'towing invoice',
     });
     const result = await this.sendEmail({
-      companyId: invoice.company_id, customerId: customer.id, message: emailContent.text, htmlContent: emailContent.html, subject: 'Towing Invoice Ready', fromEmail: setting.email,
+      companyId: invoice.company_id, customerId: customer.id, message: emailContent.text, htmlContent: emailContent.html, subject: emailSubject, fromEmail: setting.email,
       attachment: { content: pdfBuffer.toString('base64'), filename: `Towing-Invoice-${invoice.invoice_number ?? invoice.id}.pdf`, type: 'application/pdf' },
     });
-    await this.createEmailCommunicationLog({ companyId: invoice.company_id, userId: invoice.created_by, text: 'Towing Invoice Ready', scope: 'customer' });
+    await this.createEmailCommunicationLog({ companyId: invoice.company_id, userId: customer.id, text: emailSubject, sendTo: customer.email, scope: 'customer' });
     return result;
   }
 
@@ -404,6 +410,8 @@ class SendgridEmailSendService {
     const customer = vehicle.customer;
     if (!customer || customer.is_deleted) throw createHttpError('Customer not found for this vehicle', 404);
     if (!customer.email) throw createHttpError('Customer does not have an email address', 400);
+
+    const emailSubject = `Your Quotation # ${quotation.quotation_number ?? `QT-${quotation.id}`} of Vehicle VIN:${vehicle.vin ?? vehicle.VIN ?? '—'} is ready`;
 
     const setting = await SendgridSetting.findOne({ where: { company_id: quotation.company_id, is_deleted: 0 } });
     if (!setting || !setting.sendgrid_api_key || !setting.email) {
@@ -445,7 +453,7 @@ class SendgridEmailSendService {
         companyId: quotation.company_id, customerId: customer.id,
         message: emailContent.text,
         htmlContent: emailContent.html,
-        subject: 'Quotation Ready', fromEmail: setting.email,
+        subject: emailSubject, fromEmail: setting.email,
         attachment: {
           content: pdfBuffer.toString('base64'),
           filename: `Quotation-${quotation.quotation_number ?? `QT-${quotation.id}`}.pdf`,
@@ -455,8 +463,9 @@ class SendgridEmailSendService {
 
       await this.createEmailCommunicationLog({
         companyId: quotation.company_id,
-        userId: quotation.created_by,
-        text: 'Quotation Ready',
+        userId: customer.id,
+        text: emailSubject,
+        sendTo: customer.email,
         scope: 'customer',
       });
 
@@ -488,6 +497,7 @@ class SendgridEmailSendService {
 
     const vin = vehicle.vin ?? vehicle.VIN;
     if (!vin) throw createHttpError('Vehicle VIN is required to send a car-ready email', 400);
+    const emailSubject = `Your Vehicle of VIN:${vin} Is Ready for Collection`;
 
     const company = await Company.findOne({ where: { id: taskCard.company_id, is_deleted: 0 } });
     const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (character) => ({
@@ -521,7 +531,7 @@ class SendgridEmailSendService {
     const result = await this.sendEmail({
       companyId,
       customerId: customer.id,
-      subject: 'Your Vehicle Is Ready for Collection',
+      subject: emailSubject,
       message,
       htmlContent,
       fromEmail: setting.email,
@@ -535,7 +545,7 @@ class SendgridEmailSendService {
       read: 0,
     });
 
-    await this.createEmailCommunicationLog({ companyId, userId: taskCard.created_by, text: 'Your Vehicle Is Ready for Collection', scope: 'customer' });
+    await this.createEmailCommunicationLog({ companyId, userId: customer.id, text: emailSubject, sendTo: customer.email, scope: 'customer' });
     return result;
   }
 

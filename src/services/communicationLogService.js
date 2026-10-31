@@ -14,7 +14,11 @@ const validateScope = (scope) => {
 
 const getCommunicationLogById = (id) => db.CommunicationLog.findOne({
   where: { id, is_deleted: 0 },
-  include: [{ model: db.Company, as: 'company' }, { model: db.Users, as: 'user' }],
+  include: [
+    { model: db.Company, as: 'company' },
+    { model: db.Users, as: 'user' },
+    { model: db.Customer, as: 'customer' },
+  ],
 });
 
 const listCommunicationLogs = ({ company_id, channel, user_id, scope } = {}) => db.CommunicationLog.findAll({
@@ -25,7 +29,11 @@ const listCommunicationLogs = ({ company_id, channel, user_id, scope } = {}) => 
     ...(user_id !== undefined ? { user_id } : {}),
     ...(scope !== undefined ? { scope } : {}),
   },
-  include: [{ model: db.Company, as: 'company' }, { model: db.Users, as: 'user' }],
+  include: [
+    { model: db.Company, as: 'company' },
+    { model: db.Users, as: 'user' },
+    { model: db.Customer, as: 'customer' },
+  ],
   order: [['createdAt', 'DESC']],
 });
 
@@ -36,6 +44,7 @@ const createCommunicationLog = async (payload) => {
     company_id: payload.company_id,
     channel: payload.channel,
     text: payload.text ?? null,
+    send_to: payload.send_to ?? null,
     scope: payload.scope ?? 'system',
     user_id: payload.user_id,
     status: payload.status ?? 1,
@@ -51,7 +60,7 @@ const updateCommunicationLog = async (id, payload) => {
   validateScope(payload.scope);
 
   const updateData = {};
-  ['company_id', 'channel', 'text', 'scope', 'user_id', 'status'].forEach((field) => {
+  ['company_id', 'channel', 'text', 'send_to', 'scope', 'user_id', 'status'].forEach((field) => {
     if (payload[field] !== undefined) updateData[field] = payload[field];
   });
   await log.update(updateData);

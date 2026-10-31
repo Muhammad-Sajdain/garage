@@ -23,7 +23,7 @@ const listCustomers = async (company_id, customer_id) => {
       ...(company_id ? { company_id } : {}),
       ...(customer_id ? { id: Number(customer_id) } : {}),
     },
-    order: [['id', 'ASC']],
+    order: [['id', 'DESC']],
   });
 };
 

@@ -5,7 +5,7 @@ const { Task } = db;
 // List tasks (optional filters) include soft-deleted filter
 const listTasks = async (filters = {}) => {
   const where = { is_deleted: 0, ...filters };
-  return Task.findAll({ where, order: [['id', 'ASC']] });
+  return Task.findAll({ where, order: [['id', 'DESC']] });
 };
 
 const getTaskById = async (id) => {

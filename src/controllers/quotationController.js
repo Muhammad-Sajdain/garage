@@ -20,6 +20,16 @@ const parseMultipartPayload = (payload) => {
       throw new Error('Invalid quotation details payload');
     }
   }
+  if (typeof payload.deleted_document_ids === 'string') {
+    try {
+      payload.deleted_document_ids = JSON.parse(payload.deleted_document_ids);
+    } catch {
+      throw new Error('Invalid deleted quotation documents payload');
+    }
+  }
+  if (payload.deleted_document_ids !== undefined && !Array.isArray(payload.deleted_document_ids)) {
+    throw new Error('Deleted quotation documents must be an array');
+  }
   return payload;
 };
 

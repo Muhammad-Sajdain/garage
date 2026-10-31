@@ -10,7 +10,7 @@ const getBookingById = async (id) => {
 // List bookings with optional filters
 const listBookings = async (filters = {}) => {
   const where = { is_deleted: 0, ...filters };
-  return DemoBooking.findAll({ where, order: [['id', 'ASC']] });
+  return DemoBooking.findAll({ where, order: [['id', 'DESC']] });
 };
 
 // Create a new demo booking

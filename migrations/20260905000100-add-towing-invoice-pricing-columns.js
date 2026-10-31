@@ -1,29 +1,50 @@
+
 'use strict';
 
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.addColumn('towing_invoice', 'mileage', {
-      type: Sequelize.DECIMAL(10, 2),
-      allowNull: true,
-    });
-    await queryInterface.addColumn('towing_invoice', 'rate', {
-      type: Sequelize.DECIMAL(10, 2),
-      allowNull: true,
-    });
-    await queryInterface.addColumn('towing_invoice', 'miles', {
-      type: Sequelize.DECIMAL(10, 2),
-      allowNull: true,
-    });
-    await queryInterface.addColumn('towing_invoice', 'amount', {
-      type: Sequelize.DECIMAL(10, 2),
-      allowNull: true,
-    });
+    const tableName = 'towing_invoice';
+
+    const existingColumns = await queryInterface.describeTable(tableName);
+
+    const columnsToAdd = {
+      mileage: {
+        type: Sequelize.DECIMAL(10, 2),
+        allowNull: true,
+      },
+      rate: {
+        type: Sequelize.DECIMAL(10, 2),
+        allowNull: true,
+      },
+      miles: {
+        type: Sequelize.DECIMAL(10, 2),
+        allowNull: true,
+      },
+      amount: {
+        type: Sequelize.DECIMAL(10, 2),
+        allowNull: true,
+      },
+    };
+
+    for (const [columnName, definition] of Object.entries(columnsToAdd)) {
+      if (!existingColumns[columnName]) {
+        await queryInterface.addColumn(
+          tableName,
+          columnName,
+          definition
+        );
+      }
+    }
   },
 
   async down(queryInterface) {
-    await queryInterface.removeColumn('towing_invoice', 'amount');
-    await queryInterface.removeColumn('towing_invoice', 'miles');
-    await queryInterface.removeColumn('towing_invoice', 'rate');
-    await queryInterface.removeColumn('towing_invoice', 'mileage');
+    const tableName = 'towing_invoice';
+    const existingColumns = await queryInterface.describeTable(tableName);
+
+    for (const columnName of ['amount', 'miles', 'rate', 'mileage']) {
+      if (existingColumns[columnName]) {
+        await queryInterface.removeColumn(tableName, columnName);
+      }
+    }
   },
 };

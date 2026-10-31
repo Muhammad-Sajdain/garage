@@ -3,7 +3,7 @@
 
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.bulkInsert('packages', [
+    const packages = [
       {
         id: 1,
         name: 'Software Essentials',
@@ -34,9 +34,9 @@ module.exports = {
         updatedAt: '2026-10-22 22:58:38',
         is_deleted: 0,
       },
-    ]);
+    ];
 
-    await queryInterface.bulkInsert('package_infos', [
+    const packageInfos = [
       // Package 1: Software Essentials
       {
         id: 1,
@@ -258,30 +258,51 @@ module.exports = {
         updatedAt: '2026-08-02 04:58:45',
         is_deleted: 0,
       },
-    ]);
+    ];
+
+    const transaction = await queryInterface.sequelize.transaction();
+    try {
+      const existingPackages = await queryInterface.sequelize.query(
+        'SELECT id, name, monthly, yearly FROM packages WHERE id IN (1, 2, 3)',
+        { type: Sequelize.QueryTypes.SELECT, transaction },
+      );
+      const existingPackagesById = new Map(existingPackages.map((item) => [Number(item.id), item]));
+
+      for (const packageRecord of packages) {
+        const existing = existingPackagesById.get(packageRecord.id);
+        if (existing && (
+          existing.name !== packageRecord.name
+          || Number(existing.monthly) !== Number(packageRecord.monthly)
+          || Number(existing.yearly) !== Number(packageRecord.yearly)
+        )) {
+          throw new Error(`Package ID ${packageRecord.id} already exists with different data`);
+        }
+      }
+
+      await queryInterface.bulkInsert('packages', packages, { ignoreDuplicates: true, transaction });
+
+      const existingPackageInfos = await queryInterface.sequelize.query(
+        'SELECT package_id, information FROM package_infos WHERE is_deleted = 0',
+        { type: Sequelize.QueryTypes.SELECT, transaction },
+      );
+      const existingInfoKeys = new Set(existingPackageInfos.map((item) => `${item.package_id}:${item.information}`));
+      const missingPackageInfos = packageInfos
+        .filter((item) => !existingInfoKeys.has(`${item.package_id}:${item.information}`))
+        .map(({ id, ...item }) => item);
+
+      if (missingPackageInfos.length > 0) {
+        await queryInterface.bulkInsert('package_infos', missingPackageInfos, { transaction });
+      }
+
+      await transaction.commit();
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
+    }
   },
 
-  async down(queryInterface, Sequelize) {
-    await queryInterface.bulkDelete(
-      'package_infos',
-      {
-        id: {
-          [Sequelize.Op.in]: [
-            124, 125, 126, 127, 128, 129, 130, 131,
-            132, 133, 134, 135, 136, 137, 138, 139,
-            156, 157, 158, 159, 160, 161, 162, 163,
-          ],
-        },
-      }
-    );
-
-    await queryInterface.bulkDelete(
-      'packages',
-      {
-        id: {
-          [Sequelize.Op.in]: [1, 2, 3],
-        },
-      }
-    );
+  async down() {
+    // Keep seed data on rollback: these rows may have existed before this
+    // idempotent migration was applied in a given environment.
   },
 };

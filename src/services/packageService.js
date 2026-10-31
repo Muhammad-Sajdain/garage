@@ -24,7 +24,7 @@ const listPackages = async () => {
       where: { is_deleted: 0 },
       required: false,
     }],
-    order: [['id', 'ASC']],
+    order: [['id', 'DESC']],
   });
 };
 

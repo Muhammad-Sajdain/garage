@@ -25,7 +25,7 @@ const listVehicles = async ({ customer_id, company_id } = {}) => {
         required: false,
       },
     ],
-    order: [['id', 'ASC']],
+    order: [['id', 'DESC']],
   });
 };
 

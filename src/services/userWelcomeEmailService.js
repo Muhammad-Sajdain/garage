@@ -79,6 +79,7 @@ const logSystemEmail = async ({ user, companyId = null, subject }) => {
     await communicationLogService.createCommunicationLog({
       company_id: companyId,
       channel: 'Email',
+      send_to: user.email,
       user_id: user.id,
       text: subject,
       scope: 'system',

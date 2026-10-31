@@ -36,7 +36,7 @@ const listTaskAssignments = async (filters = {}) => {
   if (status !== undefined) where.status = status;
   if (company_id !== undefined) where['$task.taskCard.company_id$'] = company_id;
 
-  return TaskAssignment.findAll({ where, include: assignmentIncludes, order: [['id', 'ASC']] });
+  return TaskAssignment.findAll({ where, include: assignmentIncludes, order: [['id', 'DESC']] });
 };
 
 const getTaskAssignmentById = (id) => TaskAssignment.findOne({

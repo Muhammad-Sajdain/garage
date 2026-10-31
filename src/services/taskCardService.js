@@ -62,7 +62,7 @@ const listTaskCards = async (filters = {}) => {
       { ...taskInclude, where: { is_deleted: 0 }, required: false },
       quotationInclude,
     ],
-    order: [['id', 'ASC']],
+    order: [['id', 'DESC']],
   });
 };
 

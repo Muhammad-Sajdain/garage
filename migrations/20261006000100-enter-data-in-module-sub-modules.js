@@ -311,6 +311,14 @@ module.exports = {
         is_deleted: 0,
         createdAt: '2026-09-22 10:25:23',
       },
+      {
+        id: 35,
+        module_id: 2,
+        name: 'All Quotations',
+        status: 1,
+        is_deleted: 0,
+        createdAt: '2026-09-22 10:25:23',
+      },
     ]);
   },
 

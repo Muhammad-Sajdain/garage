@@ -73,7 +73,20 @@ const listTowingInvoices = async ({ company_id, vehicle_id, customer_id, invoice
 };
 
 const createTowingInvoice = async (payload) => {
-  const invoice = await TowingInvoice.create(getWritablePayload(payload));
+  const pickUpAddress = String(payload.pick_up_address ?? '').trim();
+  const dropOffAddress = String(payload.drop_off_address ?? '').trim();
+  const rate = Number(payload.rate);
+  if (!pickUpAddress) throw new Error('Pickup address is required');
+  if (!dropOffAddress) throw new Error('Drop off address is required');
+  if (!Number.isFinite(rate) || rate <= 0) throw new Error('Rate/Mile must be greater than 0');
+
+  const invoice = await TowingInvoice.create({
+    ...getWritablePayload(payload),
+    invoice_status: payload.invoice_status ?? 'approved',
+    payment_status: payload.payment_status ?? 'pending',
+    pick_up_address: pickUpAddress,
+    drop_off_address: dropOffAddress,
+  });
   return getTowingInvoiceById(invoice.id);
 };
 

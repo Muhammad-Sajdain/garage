@@ -84,7 +84,7 @@ const listPayments = async ({ page, limit, search, dateField, startDate, endDate
       },
     ];
   }
-  const payments = await InvoicePayment.findAll({ where, include: paymentIncludes, order: [['id', 'ASC']] });
+  const payments = await InvoicePayment.findAll({ where, include: paymentIncludes, order: [['id', 'DESC']] });
   return payments.map(withInvoiceNumber);
 };
 
