@@ -51,7 +51,7 @@ const CUSTOMER_ROLE_PERMISSIONS = {
   25: { view: true, create: false, update: false, deactivate: false, delete: false },
   26: { view: true, create: false, update: false, deactivate: false, delete: false },
   27: { view: true, create: false, update: false, deactivate: false, delete: false },
-  28: { view: false, create: false, update: false, deactivate: false, delete: false },
+  28: { view: true, create: false, update: false, deactivate: false, delete: false },
   30: { view: true, create: false, update: false, deactivate: false, delete: false },
   31: { view: true, create: true, update: false, deactivate: false, delete: false },
   32: { view: true, create: true, update: false, deactivate: false, delete: false },

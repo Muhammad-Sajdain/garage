@@ -16,6 +16,12 @@ const quotationIncludes = [
 const listQuotations = async (filters = {}) => {
   // Build a safe `where` object and map common query params
   const where = { is_deleted: 0 };
+  const customerId = filters.customer_id === undefined || filters.customer_id === ''
+    ? null
+    : Number(filters.customer_id);
+  if (customerId !== null && (!Number.isInteger(customerId) || customerId <= 0)) {
+    throw new Error('customer_id must be a valid positive integer');
+  }
 
   if (filters.company_id) where.company_id = Number(filters.company_id);
   if (filters.vehicle_id) where.vehicle_id = Number(filters.vehicle_id);
@@ -25,7 +31,9 @@ const listQuotations = async (filters = {}) => {
 
   return Quotation.findAll({
     where,
-    include: quotationIncludes,
+    include: quotationIncludes.map((include) => include.as === 'vehicle' && customerId !== null
+      ? { ...include, where: { customer_id: customerId }, required: true }
+      : include),
     order: [['id', 'DESC']],
   });
 };

@@ -226,6 +226,20 @@ const loginCustomer = async (payload) => {
   }
   const { role: customerRole, permissions } = await getCompanyRoleAccess(roleId, customer.company_id);
   const roleName = customerRole?.name ?? 'Customer';
+  const activePackageHistory = customer.company_id
+    ? await PackageHistory.findOne({
+      where: { company_id: customer.company_id, status: 1, is_deleted: 0 },
+      order: [['id', 'DESC']],
+    })
+    : null;
+  const activePackage = activePackageHistory
+    ? await Package.findOne({
+      where: { id: activePackageHistory.package_id, is_deleted: 0 },
+      attributes: ['id', 'name'],
+    })
+    : null;
+  const packageId = activePackageHistory?.package_id ?? null;
+  const packageName = activePackage?.name ?? null;
   const token = createToken({
     sub: customer.id,
     id: customer.id,
@@ -242,6 +256,9 @@ const loginCustomer = async (payload) => {
     role: roleName,
     role_name: roleName,
     company_id: customer.company_id,
+    companyId: customer.company_id,
+    PackageId: packageId,
+    PackageName: packageName,
     role_id: roleId,
     permissions,
     user: {
@@ -255,6 +272,9 @@ const loginCustomer = async (payload) => {
       role_id: roleId,
       permissions,
       company_id: customer.company_id,
+      companyId: customer.company_id,
+      PackageId: packageId,
+      PackageName: packageName,
     },
   };
 };
