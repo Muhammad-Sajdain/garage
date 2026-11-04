@@ -1,6 +1,8 @@
 const db = require('../../models');
 
-const { TowingInvoice, Company, Vehicle, Customer, InvoicePayment } = db;
+const { TowingInvoice, Company, Vehicle, Customer } = db;
+const { getPaymentSummaries } = require('./invoiceBalanceService');
+const { calculateInvoiceBalance, isInvoiceFullyPaid } = require('../utils/invoicePaymentBalance');
 
 const towingInvoiceIncludes = [
   { model: Company, as: 'company' },
@@ -24,32 +26,22 @@ const withPaymentBalances = async (invoices) => {
   const records = Array.isArray(invoices) ? invoices : invoices ? [invoices] : [];
   if (!records.length) return Array.isArray(invoices) ? [] : null;
 
-  const payments = await InvoicePayment.findAll({
-    attributes: ['invoice_id', 'balance_amount'],
-    where: {
-      invoice_id: records.map((invoice) => invoice.id),
-      invoice_type: 'Towing Service',
-      is_deleted: 0,
-    },
-    order: [['createdAt', 'DESC'], ['id', 'DESC']],
-    raw: true,
+  const paymentSummaries = await getPaymentSummaries({
+    invoiceIds: records.map((invoice) => invoice.id),
+    invoiceType: 'Towing Service',
   });
-  const balanceByInvoiceId = new Map();
-  for (const payment of payments) {
-    const invoiceId = String(payment.invoice_id);
-    if (!balanceByInvoiceId.has(invoiceId)) {
-      balanceByInvoiceId.set(invoiceId, Number(payment.balance_amount ?? 0));
-    }
-  }
 
   const enhanced = records.map((invoice) => {
     const data = invoice.toJSON();
     const total = Number(data.total ?? 0);
-    const balanceAmount = balanceByInvoiceId.get(String(data.id)) ?? total;
+    const summary = paymentSummaries.get(String(data.id)) ?? { claimedAmount: 0, verifiedAmount: 0 };
+    const balanceAmount = calculateInvoiceBalance(total, summary.claimedAmount);
     return {
       ...data,
-      amountPaid: Math.max(0, total - balanceAmount),
+      amountPaid: summary.verifiedAmount,
+      pending_payment_amount: Math.max(0, summary.claimedAmount - summary.verifiedAmount),
       balance_amount: balanceAmount,
+      payment_status: isInvoiceFullyPaid(total, summary.verifiedAmount) ? 'completed' : 'pending',
     };
   });
   return Array.isArray(invoices) ? enhanced : enhanced[0];

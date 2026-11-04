@@ -43,7 +43,12 @@ const listPayments = async (req, res) => {
 // PUT /invoice-payments/:id (multipart/form-data optional image)
 const updatePayment = async (req, res) => {
   try {
-    const payment = await invoicePaymentService.updatePayment(req.params.id, req.body, req.file);
+    const payment = await invoicePaymentService.updatePayment(
+      req.params.id,
+      req.body,
+      req.file,
+      req.auth?.sub ?? req.auth?.id ?? null,
+    );
     res.json(payment);
   } catch (err) {
     console.error('Update payment error:', err);

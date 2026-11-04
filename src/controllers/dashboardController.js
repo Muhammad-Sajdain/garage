@@ -57,10 +57,10 @@ const getCustomerDashboardMetrics = async (company_id, customerId, createdBetwee
       ? db.Sales.sum('amount', { where: { company_id, invoice_type: 'Towing Service', invoice_id: { [Op.in]: towingInvoiceIds }, is_deleted: 0, ...createdBetween } })
       : 0,
     serviceInvoiceIds.length
-      ? db.InvoicePayment.count({ where: { company_id, invoice_type: 'Service', invoice_id: { [Op.in]: serviceInvoiceIds }, is_deleted: 0, payment_status: { [Op.in]: ['pending', 'not_verified'] }, ...createdBetween } })
+      ? db.InvoicePayment.count({ where: { company_id, invoice_type: 'Service', invoice_id: { [Op.in]: serviceInvoiceIds }, is_deleted: 0, payment_status: 'pending', ...createdBetween } })
       : 0,
     towingInvoiceIds.length
-      ? db.InvoicePayment.count({ where: { company_id, invoice_type: 'Towing Service', invoice_id: { [Op.in]: towingInvoiceIds }, is_deleted: 0, payment_status: { [Op.in]: ['pending', 'not_verified'] }, ...createdBetween } })
+      ? db.InvoicePayment.count({ where: { company_id, invoice_type: 'Towing Service', invoice_id: { [Op.in]: towingInvoiceIds }, is_deleted: 0, payment_status: 'pending', ...createdBetween } })
       : 0,
     taskCardIds.length
       ? Promise.all([
@@ -124,8 +124,8 @@ const getCompanyDashboardStats = async (req, res) => {
       db.Invoice.count({ where: { company_id, is_deleted: 0, invoice_status: 'pending', ...createdBetween } }),
       // Total Pending Quotations (quotation_status in draft,pending)
       db.Quotation.count({ where: { company_id, is_deleted: 0, quotation_status: { [Op.in]: ['draft', 'pending'] }, ...createdBetween } }),
-      // Total Pending Payments (invoice_payments with payment_status pending or not_verified)
-      db.InvoicePayment.count({ where: { company_id, is_deleted: 0, payment_status: { [Op.in]: ['pending', 'not_verified'] }, ...createdBetween } }),
+      // Total Pending Payments (invoice_payments with payment_status pending)
+      db.InvoicePayment.count({ where: { company_id, is_deleted: 0, payment_status: 'pending', ...createdBetween } }),
       // Total Employees (company_users)
       db.CompanyUser.count({ where: { company_id, status: 1, is_deleted: 0, ...createdBetween } }),
       // Total Customers

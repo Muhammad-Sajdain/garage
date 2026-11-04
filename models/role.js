@@ -21,6 +21,7 @@ module.exports = (sequelize, DataTypes) => {
   }, {
     sequelize,
     modelName: 'Role',
+    tableName: 'roles',
   });
   Role.associate = models => {
     Role.belongsTo(models.Company, { foreignKey: 'company_id', as: 'company' });

@@ -1,6 +1,8 @@
 // src/services/invoiceService.js
 const db = require('../../models');
-const { Invoice, InvoiceDetail, InvoicePayment, TaskCard, Quotation, Vehicle, Customer, Sequelize } = db;
+const { Invoice, InvoiceDetail, TaskCard, Quotation, Vehicle, Customer } = db;
+const { getPaymentSummaries } = require('./invoiceBalanceService');
+const { calculateInvoiceBalance, isInvoiceFullyPaid } = require('../utils/invoicePaymentBalance');
 
 const invoiceIncludes = [
   { model: InvoiceDetail, as: 'details', where: { is_deleted: 0 }, required: false },
@@ -41,24 +43,17 @@ const listInvoices = async (filters = {}) => {
   if (!invoices.length) return [];
 
   const invoiceIds = invoices.map(invoice => invoice.id);
-  const paymentTotals = await InvoicePayment.findAll({
-    attributes: [
-      'invoice_id',
-      [Sequelize.fn('SUM', Sequelize.col('paid_amount')), 'paid_amount'],
-    ],
-    where: { invoice_id: invoiceIds, is_deleted: 0, payment_status: 'verified' },
-    group: ['invoice_id'],
-    raw: true,
-  });
-  const paidByInvoiceId = new Map(paymentTotals.map(payment => [String(payment.invoice_id), Number(payment.paid_amount ?? 0)]));
+  const paymentSummaries = await getPaymentSummaries({ invoiceIds, invoiceType: 'Service' });
 
   return invoices.map(invoice => {
     const data = invoice.toJSON();
-    const paidAmount = paidByInvoiceId.get(String(invoice.id)) ?? 0;
+    const summary = paymentSummaries.get(String(invoice.id)) ?? { claimedAmount: 0, verifiedAmount: 0 };
     return {
       ...data,
-      paid_amount: paidAmount,
-      balance_amount: Math.max(0, Number(data.total ?? 0) - paidAmount),
+      paid_amount: summary.verifiedAmount,
+      pending_payment_amount: Math.max(0, summary.claimedAmount - summary.verifiedAmount),
+      balance_amount: calculateInvoiceBalance(data.total, summary.claimedAmount),
+      payment_status: isInvoiceFullyPaid(data.total, summary.verifiedAmount) ? 'completed' : 'pending',
     };
   });
 };

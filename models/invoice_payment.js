@@ -10,7 +10,7 @@ module.exports = (sequelize, DataTypes) => {
     picture: { type: DataTypes.STRING, allowNull: true },
     payment_method: { type: DataTypes.ENUM('cash', 'card', 'bank_transfer', 'online'), allowNull: false },
     invoice_type: { type: DataTypes.ENUM('Service', 'Towing Service'), allowNull: false, defaultValue: 'Service' },
-    payment_status: { type: DataTypes.ENUM('pending', 'not_verified', 'verified', 'rejected'), allowNull: false },
+    payment_status: { type: DataTypes.ENUM('pending', 'verified', 'verified_with_adjustment', 'rejected'), allowNull: false },
     payment_done_by: { type: DataTypes.ENUM('company', 'customer'), allowNull: false },
     is_deleted: { type: DataTypes.TINYINT, allowNull: false, defaultValue: 0 },
     created_by: { type: DataTypes.INTEGER, allowNull: false },
