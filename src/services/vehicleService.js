@@ -4,6 +4,9 @@ const Vehicle = db.Vehicle;
 const InsuredVehicle = db.InsuredVehicle;
 const Customer = db.Customer;
 
+const normalizeLicensePlate = (licensePlate) =>
+  typeof licensePlate === 'string' && licensePlate.trim() === '' ? null : licensePlate;
+
 const listVehicles = async ({ customer_id, company_id } = {}) => {
   return Vehicle.findAll({
     where: {
@@ -75,7 +78,7 @@ const createVehicle = async (payload) => {
     variant,
     year,
     VIN,
-    license_plate,
+    license_plate: normalizeLicensePlate(license_plate),
     insured,
     created_by,
     status,
@@ -109,6 +112,9 @@ const updateVehicle = async (id, payload) => {
   }
 
   const { insuranceDetails, insurance_number, policy_number, expiry_date, claim_number, insurance_company, insurance_company_phone, ...vehicleData } = payload;
+  if (Object.prototype.hasOwnProperty.call(vehicleData, 'license_plate')) {
+    vehicleData.license_plate = normalizeLicensePlate(vehicleData.license_plate);
+  }
   await vehicle.update(vehicleData);
 
   // Merge top-level insurance fields with nested insuranceDetails (nested overrides)
